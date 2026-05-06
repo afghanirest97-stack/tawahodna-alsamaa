@@ -42,9 +42,9 @@
       "last 1 safari version"
     ]
   },
-  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "description": "موقع توحدنا للسماع - منصة لنشر الأسانيد المتصلة والتراث الإسلامي",
   "main": "index.js",
-  "keywords": [],
+  "keywords": ["اسانيد", "حديث", "تراث", "سماع"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

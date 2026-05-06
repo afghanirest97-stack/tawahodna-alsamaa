@@ -5,7 +5,7 @@ import { FaBars, FaTimes, FaUser, FaSignOutAlt } from 'react-icons/fa';
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [logoError, setLogoError] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,24 +40,24 @@ function Header() {
     <header className="header">
       <div className="header-container">
         <div className="logo">
-          <Link to="/">
-            <img 
-              src="/tawqan_alsamaa_website_logo.png"
-              alt="توحدنا للسماع" 
-              className="logo-img"
-              onError={(e) => {
-                console.log('Logo failed, trying fallback');
-                e.target.src = '/logo512.png';
-                setLogoError(true);
-              }}
-              style={{ 
-                height: '70px', 
-                width: 'auto'
-              }}
-            />
-            <span className="logo-text" style={{ display: 'none' }}>
-              توحدنا <span>للسماع</span>
-            </span>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            {!imgError ? (
+              <img 
+                src="/tawqan_alsamaa_website_logo.png"
+                alt="توحدنا للسماع" 
+                className="logo-img"
+                onError={() => setImgError(true)}
+                style={{ 
+                  height: '60px', 
+                  width: 'auto',
+                  display: 'block'
+                }}
+              />
+            ) : (
+              <span className="logo-text">
+                توحدنا <span>للسماع</span>
+              </span>
+            )}
           </Link>
         </div>
         
@@ -87,13 +87,30 @@ function Header() {
       </div>
 
       <style>{`
-        .logo {
+        .header {
+          background: linear-gradient(135deg, #0d2b3e 0%, #1b4f6e 100%);
+          padding: 0.75rem 0;
+          position: sticky;
+          top: 0;
+          z-index: 1000;
+        }
+        
+        .header-container {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 0 2rem;
           display: flex;
+          justify-content: space-between;
           align-items: center;
+          gap: 2rem;
+        }
+        
+        .logo {
+          flex-shrink: 0;
         }
         
         .logo-img {
-          height: 70px;
+          height: 60px;
           width: auto;
           transition: all 0.3s ease;
         }
@@ -111,6 +128,39 @@ function Header() {
         
         .logo-text span {
           color: #e8b339;
+        }
+        
+        .nav-toggle {
+          display: none;
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: white;
+          padding: 0.5rem;
+        }
+        
+        .nav-menu {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+        }
+        
+        .nav-menu a {
+          color: rgba(255,255,255,0.9);
+          text-decoration: none;
+          padding: 0.5rem 1rem;
+          border-radius: 50px;
+          font-size: 0.95rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+        }
+        
+        .nav-menu a:hover {
+          color: #e8b339;
+          background: rgba(255,255,255,0.1);
         }
         
         .user-menu {
@@ -131,7 +181,6 @@ function Header() {
           border-radius: 50px;
           color: #e8b339 !important;
           text-decoration: none;
-          transition: all 0.2s ease;
         }
         
         .user-profile:hover {
@@ -160,8 +209,38 @@ function Header() {
         }
         
         @media (max-width: 768px) {
+          .header-container {
+            padding: 0 1rem;
+            flex-wrap: wrap;
+          }
+          
+          .nav-toggle {
+            display: block;
+          }
+          
+          .nav-menu {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            margin-top: 1rem;
+          }
+          
+          .nav-menu.open {
+            display: flex;
+          }
+          
+          .nav-menu a {
+            width: 100%;
+            text-align: center;
+            padding: 0.75rem;
+          }
+          
           .logo-img {
-            height: 50px;
+            height: 45px;
+          }
+          
+          .logo-text {
+            font-size: 1.2rem;
           }
           
           .user-menu {
@@ -172,12 +251,17 @@ function Header() {
             padding-top: 0.75rem;
             margin-top: 0.5rem;
             justify-content: center;
+            width: 100%;
           }
         }
         
         @media (max-width: 480px) {
           .logo-img {
             height: 40px;
+          }
+          
+          .logo-text {
+            font-size: 1rem;
           }
         }
       `}</style>

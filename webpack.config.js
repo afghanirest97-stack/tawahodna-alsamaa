@@ -27,13 +27,19 @@ module.exports = {
         use: ['style-loader', 'css-loader', 'postcss-loader'],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif|webp)$/i,
+        test: /\.(png|svg|jpg|jpeg|gif|webp|ico)$/i,
         type: 'asset/resource',
+        generator: {
+          filename: 'static/media/[name].[hash][ext]'
+        }
       },
     ],
   },
   resolve: {
     extensions: ['.js', '.jsx'],
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
   },
   devServer: {
     historyApiFallback: true,
@@ -44,7 +50,7 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
-      favicon: false,
+      favicon: './public/favicon.ico',
     }),
   ],
   optimization: {
