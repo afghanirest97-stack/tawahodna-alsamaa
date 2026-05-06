@@ -9,7 +9,6 @@ function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // تحميل المستخدم عند بدء التشغيل وعند تغيير الصفحة
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -23,7 +22,6 @@ function Header() {
     localStorage.removeItem('user');
     setUser(null);
     navigate('/');
-    // إعادة تحميل الصفحة لتحديث جميع المكونات
     setTimeout(() => {
       window.location.reload();
     }, 100);
@@ -56,7 +54,7 @@ function Header() {
                 className="logo-img"
                 onError={() => setImgError(true)}
                 style={{ 
-                  height: '60px', 
+                  height: '55px', 
                   width: 'auto',
                   display: 'block'
                 }}
@@ -127,7 +125,7 @@ function Header() {
         }
         
         .logo-img {
-          height: 60px;
+          height: 55px;
           width: auto;
           transition: all 0.3s ease;
         }
@@ -138,7 +136,7 @@ function Header() {
         
         .logo-text {
           font-family: 'Amiri', serif;
-          font-size: 1.5rem;
+          font-size: 1.4rem;
           font-weight: 700;
           color: white;
         }
@@ -160,7 +158,7 @@ function Header() {
         .nav-menu {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.25rem;
           flex-wrap: wrap;
         }
         
@@ -169,7 +167,7 @@ function Header() {
           text-decoration: none;
           padding: 0.5rem 1rem;
           border-radius: 50px;
-          font-size: 0.95rem;
+          font-size: 0.9rem;
           font-weight: 500;
           transition: all 0.3s ease;
           white-space: nowrap;
@@ -236,6 +234,7 @@ function Header() {
           transform: translateY(-2px);
         }
         
+        /* ========== RESPONSIVE - تصحيح مشكلة القائمة في الهاتف ========== */
         @media (max-width: 768px) {
           .header-container {
             padding: 0 1rem;
@@ -248,9 +247,17 @@ function Header() {
           
           .nav-menu {
             display: none;
-            width: 100%;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1b4f6e;  /* خلفية زرقاء غامقة */
             flex-direction: column;
-            margin-top: 1rem;
+            padding: 1rem;
+            gap: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-radius: 0 0 20px 20px;
+            z-index: 999;
           }
           
           .nav-menu.open {
@@ -261,6 +268,20 @@ function Header() {
             width: 100%;
             text-align: center;
             padding: 0.75rem;
+            font-size: 1rem;
+            color: white !important;  /* النص أبيض */
+            background: transparent;
+          }
+          
+          .nav-menu a:hover,
+          .nav-menu a.active {
+            background: rgba(232, 179, 57, 0.2);
+            color: #e8b339 !important;
+          }
+          
+          .login-link {
+            border: 1px solid #e8b339;
+            margin-top: 0.25rem;
           }
           
           .logo-img {
@@ -280,6 +301,18 @@ function Header() {
             margin-top: 0.5rem;
             justify-content: center;
             width: 100%;
+            flex-direction: column;
+          }
+          
+          .user-profile {
+            width: 100%;
+            justify-content: center;
+          }
+          
+          .logout-btn {
+            width: 100%;
+            justify-content: center;
+            margin-top: 0.25rem;
           }
         }
         
