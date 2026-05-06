@@ -13,6 +13,7 @@ import Books from './pages/Books';
 import Benefits from './pages/Benefits';
 import Contact from './pages/Contact';
 import ImportantLinks from './pages/ImportantLinks';
+import Ijaza from './pages/Ijaza';  // إضافة استيراد صفحة الإجازات
 import Login from './pages/Login';
 import AdminPanel from './pages/Admin/AdminPanel';
 import './App.css';
@@ -21,7 +22,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // محاكاة تحميل البيانات
     setTimeout(() => setIsLoading(false), 500);
   }, []);
 
@@ -55,6 +55,7 @@ function App() {
             <Route path="/benefits" element={<Benefits />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/links" element={<ImportantLinks />} />
+            <Route path="/ijaza" element={<Ijaza />} />  {/* إضافة مسار الإجازات */}
             <Route path="/login" element={<Login />} />
             <Route path="/admin/*" element={<AdminPanel />} />
           </Routes>

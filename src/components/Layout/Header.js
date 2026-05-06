@@ -31,47 +31,31 @@ function Header() {
     { path: '/scholars', label: 'تراجم العلماء' },
     { path: '/books', label: 'الكتب العلمية' },
     { path: '/benefits', label: 'فوائد علمية' },
+    { path: '/ijaza', label: 'الإجازات' },
     { path: '/contact', label: 'تواصل معنا' },
     { path: '/links', label: 'روابط مهمة' },
   ];
-
-  // قائمة بأسماء الملفات المحتملة للشعار
-  const logoPaths = [
-    '/tawqan_alsamae_website_logo.png',
-    '/tawqan_alsamaa_website_logo.png',
-    '/logo192.png',
-    '/logo512.png'
-  ];
-
-  const [currentLogoIndex, setCurrentLogoIndex] = useState(0);
-
-  const handleLogoError = () => {
-    if (currentLogoIndex < logoPaths.length - 1) {
-      setCurrentLogoIndex(currentLogoIndex + 1);
-    } else {
-      setLogoError(true);
-    }
-  };
 
   return (
     <header className="header">
       <div className="header-container">
         <div className="logo">
           <Link to="/">
-            {!logoError && (
-              <img 
-                src={logoPaths[currentLogoIndex]}
-                alt="توحدنا للسماع" 
-                className="logo-img"
-                onError={handleLogoError}
-                style={{ 
-                  height: '70px', 
-                  width: 'auto',
-                  filter: 'none'  // إزالة الفلتر الأبيض
-                }}
-              />
-            )}
-            <span className="logo-text" style={{ display: logoError ? 'block' : 'none' }}>
+            <img 
+              src="/tawqan_alsamaa_website_logo.png"
+              alt="توحدنا للسماع" 
+              className="logo-img"
+              onError={(e) => {
+                console.log('Logo failed, trying fallback');
+                e.target.src = '/logo512.png';
+                setLogoError(true);
+              }}
+              style={{ 
+                height: '70px', 
+                width: 'auto'
+              }}
+            />
+            <span className="logo-text" style={{ display: 'none' }}>
               توحدنا <span>للسماع</span>
             </span>
           </Link>
@@ -112,11 +96,21 @@ function Header() {
           height: 70px;
           width: auto;
           transition: all 0.3s ease;
-          /* إزالة filter brightness invert */
         }
         
         .logo-img:hover {
           transform: scale(1.03);
+        }
+        
+        .logo-text {
+          font-family: 'Amiri', serif;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: white;
+        }
+        
+        .logo-text span {
+          color: #e8b339;
         }
         
         .user-menu {
