@@ -36,7 +36,6 @@ function Login() {
       }
 
       if (userData.password_hash === password) {
-        // حفظ بيانات المستخدم مع الاسم
         const userToStore = {
           id: userData.id,
           email: userData.email,
@@ -45,6 +44,10 @@ function Login() {
           created_at: userData.created_at
         };
         localStorage.setItem('user', JSON.stringify(userToStore));
+        
+        // تحديث الصفحة الرئيسية لإظهار المستخدم في الهيدر
+        window.dispatchEvent(new Event('storage'));
+        
         navigate('/admin');
       } else {
         setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaBars, FaTimes, FaUser, FaSignOutAlt } from 'react-icons/fa';
 
 function Header() {
@@ -7,18 +7,26 @@ function Header() {
   const [user, setUser] = useState(null);
   const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // تحميل المستخدم عند بدء التشغيل وعند تغيير الصفحة
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    } else {
+      setUser(null);
     }
-  }, []);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     setUser(null);
     navigate('/');
+    // إعادة تحميل الصفحة لتحديث جميع المكونات
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const menuItems = [
@@ -67,21 +75,30 @@ function Header() {
         
         <nav className={`nav-menu ${isOpen ? 'open' : ''}`}>
           {menuItems.map((item, index) => (
-            <Link key={index} to={item.path} onClick={() => setIsOpen(false)}>
+            <Link 
+              key={index} 
+              to={item.path} 
+              onClick={() => setIsOpen(false)}
+              className={location.pathname === item.path ? 'active' : ''}
+            >
               {item.label}
             </Link>
           ))}
           
-          {user && (
+          {user ? (
             <div className="user-menu">
               <Link to="/admin" className="user-profile">
                 <FaUser />
                 <span>{user.name || user.email?.split('@')[0]}</span>
               </Link>
               <button onClick={handleLogout} className="logout-btn" title="تسجيل الخروج">
-                <FaSignOutAlt />
+                <FaSignOutAlt /> خروج
               </button>
             </div>
+          ) : (
+            <Link to="/login" className="login-link" onClick={() => setIsOpen(false)}>
+              تسجيل الدخول
+            </Link>
           )}
         </nav>
       </div>
@@ -158,9 +175,20 @@ function Header() {
           white-space: nowrap;
         }
         
-        .nav-menu a:hover {
+        .nav-menu a:hover,
+        .nav-menu a.active {
           color: #e8b339;
           background: rgba(255,255,255,0.1);
+        }
+        
+        .login-link {
+          background: rgba(232, 179, 57, 0.15);
+          border: 1px solid #e8b339;
+        }
+        
+        .login-link:hover {
+          background: #e8b339;
+          color: #0d2b3e !important;
         }
         
         .user-menu {
