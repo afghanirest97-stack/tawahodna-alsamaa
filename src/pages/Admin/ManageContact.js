@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { FaTelegram, FaFacebook, FaTwitter, FaWhatsapp, FaInstagram, FaPhone, FaEnvelope, FaMapMarkerAlt, FaSave, FaTrash, FaCheckCircle, FaEnvelopeOpen, FaUser, FaCalendarAlt } from 'react-icons/fa';
+import { 
+  FaTelegram, FaFacebook, FaTwitter, FaWhatsapp, FaInstagram, 
+  FaPhone, FaEnvelope, FaMapMarkerAlt, FaSave, FaTrash, 
+  FaCheckCircle, FaEnvelopeOpen, FaUser, FaCalendarAlt, 
+  FaUserPlus, FaTimes, FaSpinner 
+} from 'react-icons/fa';
 
 function ManageContact() {
   const [contactInfo, setContactInfo] = useState({
@@ -13,15 +18,20 @@ function ManageContact() {
     instagram: '',
     address: ''
   });
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('info');
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
+const [messages, setMessages] = useState([]);
+const [membershipRequests, setMembershipRequests] = useState([]);
+const [members, setMembers] = useState([]);
+const [loading, setLoading] = useState(false);
+const [activeTab, setActiveTab] = useState('info');
+const [activeSubTab, setActiveSubTab] = useState('pending');  // أضف هذا السطر
+const [saving, setSaving] = useState(false);
+const [toast, setToast] = useState(null);
 
   useEffect(() => {
     fetchContactInfo();
     fetchMessages();
+    fetchMembershipRequests();
+    fetchMembers();
   }, []);
 
   async function fetchContactInfo() {
@@ -51,11 +61,38 @@ function ManageContact() {
       
       if (error) {
         console.error('Error fetching messages:', error);
-        showToast('حدث خطأ في جلب الرسائل', 'error');
       }
       if (data) setMessages(data);
     } catch (error) {
       console.error('Error:', error);
+    }
+  }
+
+  async function fetchMembershipRequests() {
+    try {
+      const { data, error } = await supabase
+        .from('membership_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      if (data) setMembershipRequests(data);
+    } catch (error) {
+      console.error('Error fetching membership requests:', error);
+    }
+  }
+
+  async function fetchMembers() {
+    try {
+      const { data, error } = await supabase
+        .from('members')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      if (data) setMembers(data);
+    } catch (error) {
+      console.error('Error fetching members:', error);
     }
   }
 
@@ -184,6 +221,68 @@ function ManageContact() {
     }
   }
 
+  // دوال إدارة العضوية
+  async function approveRequest(id, fullName, country, email) {
+    if (!confirm('هل أنت متأكد من الموافقة على هذا الطلب؟')) return;
+    
+    try {
+      const { error: updateError } = await supabase
+        .from('membership_requests')
+        .update({ status: 'approved', approved_at: new Date() })
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      const { error: insertError } = await supabase
+        .from('members')
+        .insert([{ full_name: fullName, country: country, email: email }]);
+      
+      if (insertError) throw insertError;
+      
+      showToast('تم الموافقة على العضوية وإضافة العضو', 'success');
+      fetchMembershipRequests();
+      fetchMembers();
+    } catch (error) {
+      showToast('حدث خطأ: ' + error.message, 'error');
+    }
+  }
+
+  async function rejectRequest(id) {
+    if (!confirm('هل أنت متأكد من رفض هذا الطلب؟')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('membership_requests')
+        .update({ status: 'rejected' })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      showToast('تم رفض الطلب', 'success');
+      fetchMembershipRequests();
+    } catch (error) {
+      showToast('حدث خطأ: ' + error.message, 'error');
+    }
+  }
+
+  async function deleteMember(id, fullName) {
+    if (!confirm(`هل أنت متأكد من حذف العضو "${fullName}"؟`)) return;
+    
+    try {
+      const { error } = await supabase
+        .from('members')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      showToast('تم حذف العضو بنجاح', 'success');
+      fetchMembers();
+    } catch (error) {
+      showToast('حدث خطأ: ' + error.message, 'error');
+    }
+  }
+
   const formatDate = (date) => {
     return new Date(date).toLocaleString('ar', {
       year: 'numeric',
@@ -195,6 +294,7 @@ function ManageContact() {
   };
 
   const unreadCount = messages.filter(m => !m.is_read).length;
+  const pendingRequestsCount = membershipRequests.filter(r => r.status === 'pending').length;
 
   const socialFields = [
     { key: 'telegram', label: 'تيليجرام', icon: FaTelegram, color: '#0088cc', placeholder: 'https://t.me/username' },
@@ -228,6 +328,13 @@ function ManageContact() {
         >
           <FaEnvelope /> رسائل الزوار
           {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'membership' ? 'active' : ''}`}
+          onClick={() => setActiveTab('membership')}
+        >
+          <FaUserPlus /> طلبات العضوية
+          {pendingRequestsCount > 0 && <span className="badge">{pendingRequestsCount}</span>}
         </button>
       </div>
 
@@ -364,9 +471,170 @@ function ManageContact() {
         </div>
       )}
 
+      {activeTab === 'membership' && (
+        <div className="membership-section">
+          <div className="section-header-premium">
+            <h2>📋 طلبات العضوية</h2>
+            <p>إدارة طلبات التسجيل في مدرسة توحدنا للسماع</p>
+          </div>
+
+          <div className="membership-stats">
+            <div className={`stat-badge pending ${pendingRequestsCount > 0 ? 'has-items' : ''}`}>
+              قيد الانتظار: {pendingRequestsCount}
+            </div>
+            <div className="stat-badge approved">
+              تم الموافقة: {membershipRequests.filter(r => r.status === 'approved').length}
+            </div>
+            <div className="stat-badge rejected">
+              مرفوض: {membershipRequests.filter(r => r.status === 'rejected').length}
+            </div>
+            <div className="stat-badge total">
+              إجمالي الأعضاء: {members.length}
+            </div>
+          </div>
+
+          <div className="membership-sub-tabs">
+            <button 
+              className={`sub-tab ${activeSubTab === 'pending' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('pending')}
+            >
+              طلبات الانتظار {pendingRequestsCount > 0 && `(${pendingRequestsCount})`}
+            </button>
+            <button 
+              className={`sub-tab ${activeSubTab === 'all' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('all')}
+            >
+              جميع الطلبات
+            </button>
+            <button 
+              className={`sub-tab ${activeSubTab === 'members' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('members')}
+            >
+              الأعضاء المعتمدون ({members.length})
+            </button>
+          </div>
+
+          {activeSubTab === 'pending' && (
+            <div className="membership-requests-list">
+              {membershipRequests.filter(r => r.status === 'pending').length === 0 ? (
+                <div className="empty-state">
+                  <FaUserPlus />
+                  <h3>لا توجد طلبات قيد الانتظار</h3>
+                  <p>جميع الطلبات تمت معالجتها</p>
+                </div>
+              ) : (
+                membershipRequests.filter(r => r.status === 'pending').map(request => (
+                  <div key={request.id} className="request-card pending">
+                    <div className="request-header">
+                      <div className="request-user">
+                        <div className="user-avatar">
+                          {request.full_name?.charAt(0)?.toUpperCase()}
+                        </div>
+                        <div className="user-details">
+                          <strong>{request.full_name}</strong>
+                          <span>{request.country}</span>
+                          <span className="request-email">{request.email}</span>
+                        </div>
+                      </div>
+                      <div className="request-status-badge pending">قيد الانتظار</div>
+                    </div>
+                    <div className="request-meta">
+                      تاريخ الطلب: {new Date(request.created_at).toLocaleDateString('ar')}
+                    </div>
+                    <div className="request-actions">
+                      <button onClick={() => approveRequest(request.id, request.full_name, request.country, request.email)} className="btn-approve">
+                        <FaCheckCircle /> موافقة
+                      </button>
+                      <button onClick={() => rejectRequest(request.id)} className="btn-reject">
+                        <FaTimes /> رفض
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeSubTab === 'all' && (
+            <div className="membership-requests-list">
+              {membershipRequests.length === 0 ? (
+                <div className="empty-state">
+                  <FaUserPlus />
+                  <h3>لا توجد طلبات</h3>
+                  <p>لم يتم تقديم أي طلب عضوية بعد</p>
+                </div>
+              ) : (
+                membershipRequests.map(request => (
+                  <div key={request.id} className={`request-card ${request.status}`}>
+                    <div className="request-header">
+                      <div className="request-user">
+                        <div className="user-avatar">
+                          {request.full_name?.charAt(0)?.toUpperCase()}
+                        </div>
+                        <div className="user-details">
+                          <strong>{request.full_name}</strong>
+                          <span>{request.country}</span>
+                          <span className="request-email">{request.email}</span>
+                        </div>
+                      </div>
+                      <div className={`request-status-badge ${request.status}`}>
+                        {request.status === 'pending' ? 'قيد الانتظار' : 
+                         request.status === 'approved' ? 'تم الموافقة' : 'مرفوض'}
+                      </div>
+                    </div>
+                    <div className="request-meta">
+                      تاريخ الطلب: {new Date(request.created_at).toLocaleDateString('ar')}
+                      {request.approved_at && ` | تاريخ الموافقة: ${new Date(request.approved_at).toLocaleDateString('ar')}`}
+                    </div>
+                    {request.status === 'pending' && (
+                      <div className="request-actions">
+                        <button onClick={() => approveRequest(request.id, request.full_name, request.country, request.email)} className="btn-approve">
+                          <FaCheckCircle /> موافقة
+                        </button>
+                        <button onClick={() => rejectRequest(request.id)} className="btn-reject">
+                          <FaTimes /> رفض
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeSubTab === 'members' && (
+            <div className="members-list">
+              {members.length === 0 ? (
+                <div className="empty-state">
+                  <FaUser />
+                  <h3>لا يوجد أعضاء معتمدون</h3>
+                  <p>قم بالموافقة على طلبات العضوية لإضافة أعضاء</p>
+                </div>
+              ) : (
+                members.map(member => (
+                  <div key={member.id} className="member-card-admin">
+                    <div className="member-avatar-admin">
+                      {member.full_name?.charAt(0)?.toUpperCase()}
+                    </div>
+                    <div className="member-info-admin">
+                      <strong>{member.full_name}</strong>
+                      <span>{member.country}</span>
+                      <small className="member-email-admin">{member.email}</small>
+                    </div>
+                    <button onClick={() => deleteMember(member.id, member.full_name)} className="btn-delete-member">
+                      <FaTrash /> حذف
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <style>{`
         .manage-contact-premium {
-          max-width: 1000px;
+          max-width: 1200px;
           margin: 0 auto;
           position: relative;
         }
@@ -462,7 +730,8 @@ function ManageContact() {
         }
 
         .contact-info-section,
-        .messages-section {
+        .messages-section,
+        .membership-section {
           background: white;
           border-radius: 20px;
           padding: 1.5rem;
@@ -738,9 +1007,254 @@ function ManageContact() {
           margin-bottom: 1rem;
         }
 
-        .empty-state-messages h3 {
+        /* Membership Styles */
+        .membership-stats {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+          flex-wrap: wrap;
+        }
+
+        .stat-badge {
+          padding: 0.5rem 1rem;
+          border-radius: 50px;
+          font-size: 0.85rem;
+          font-weight: 500;
+        }
+
+        .stat-badge.pending {
+          background: #fff3cd;
+          color: #f39c12;
+        }
+        .stat-badge.pending.has-items {
+          animation: pulse 1s infinite;
+        }
+        .stat-badge.approved {
+          background: #d4edda;
+          color: #27ae60;
+        }
+        .stat-badge.rejected {
+          background: #fee2e2;
+          color: #dc2626;
+        }
+        .stat-badge.total {
+          background: #e8b33920;
+          color: #e8b339;
+        }
+
+        @keyframes pulse {
+          0% { opacity: 0.6; }
+          50% { opacity: 1; }
+          100% { opacity: 0.6; }
+        }
+
+        .membership-sub-tabs {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .sub-tab {
+          padding: 0.5rem 1rem;
+          background: none;
+          border: none;
+          cursor: pointer;
           color: #6c757d;
-          margin-bottom: 0.5rem;
+          transition: all 0.2s ease;
+        }
+
+        .sub-tab.active {
+          color: #e8b339;
+          border-bottom: 2px solid #e8b339;
+        }
+
+        .membership-requests-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .request-card {
+          background: #f8f9fa;
+          border-radius: 16px;
+          padding: 1rem;
+          border-right: 3px solid;
+        }
+
+        .request-card.pending {
+          border-right-color: #f39c12;
+        }
+        .request-card.approved {
+          border-right-color: #27ae60;
+        }
+        .request-card.rejected {
+          border-right-color: #dc2626;
+        }
+
+        .request-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .request-user {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .user-avatar {
+          width: 45px;
+          height: 45px;
+          background: linear-gradient(135deg, #1b4f6e, #0d2b3e);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: #e8b339;
+        }
+
+        .user-details strong {
+          display: block;
+          color: #1b4f6e;
+        }
+
+        .user-details span {
+          font-size: 0.8rem;
+          color: #6c757d;
+        }
+
+        .request-email {
+          font-size: 0.7rem;
+          color: #e8b339 !important;
+        }
+
+        .request-status-badge {
+          padding: 0.25rem 0.75rem;
+          border-radius: 20px;
+          font-size: 0.7rem;
+        }
+        .request-status-badge.pending {
+          background: #fff3cd;
+          color: #f39c12;
+        }
+        .request-status-badge.approved {
+          background: #d4edda;
+          color: #27ae60;
+        }
+        .request-status-badge.rejected {
+          background: #fee2e2;
+          color: #dc2626;
+        }
+
+        .request-meta {
+          font-size: 0.7rem;
+          color: #adb5bd;
+          margin-bottom: 0.75rem;
+        }
+
+        .request-actions {
+          display: flex;
+          gap: 0.75rem;
+          justify-content: flex-end;
+        }
+
+        .btn-approve {
+          background: #d4edda;
+          color: #27ae60;
+          border: none;
+          padding: 0.4rem 1rem;
+          border-radius: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .btn-reject {
+          background: #fee2e2;
+          color: #dc2626;
+          border: none;
+          padding: 0.4rem 1rem;
+          border-radius: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .members-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .member-card-admin {
+          background: #f8f9fa;
+          border-radius: 12px;
+          padding: 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .member-avatar-admin {
+          width: 40px;
+          height: 40px;
+          background: linear-gradient(135deg, #1b4f6e, #0d2b3e);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #e8b339;
+        }
+
+        .member-info-admin {
+          flex: 1;
+        }
+
+        .member-info-admin strong {
+          display: block;
+          color: #1b4f6e;
+          font-size: 0.9rem;
+        }
+
+        .member-info-admin span {
+          font-size: 0.75rem;
+          color: #6c757d;
+        }
+
+        .member-email-admin {
+          font-size: 0.65rem;
+          color: #e8b339 !important;
+        }
+
+        .btn-delete-member {
+          background: #fee2e2;
+          color: #dc2626;
+          border: none;
+          padding: 0.3rem 0.8rem;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+
+        .empty-state {
+          text-align: center;
+          padding: 3rem;
+          color: #adb5bd;
+        }
+
+        .empty-state svg {
+          font-size: 3rem;
+          margin-bottom: 1rem;
         }
 
         @media (max-width: 768px) {
@@ -769,6 +1283,19 @@ function ManageContact() {
           .btn-delete-all {
             flex: 1;
             justify-content: center;
+          }
+          
+          .membership-stats {
+            flex-direction: column;
+          }
+          
+          .request-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .member-card-admin {
+            flex-wrap: wrap;
           }
         }
       `}</style>

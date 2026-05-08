@@ -11,27 +11,33 @@ import ManageSessions from './ManageSessions';
 import ManageBenefits from './ManageBenefits';
 import ManageIjaza from './ManageIjaza';
 import ManageLinks from './ManageLinks';
+import ManageStudySanad from './ManageStudySanad';
 import ManageUsers from './ManageUsers';
 import { 
   FaHome, FaBook, FaUsers, FaEnvelope, 
   FaImage, FaLink, FaChalkboardTeacher, 
   FaMicrophoneAlt, FaGraduationCap, FaCertificate,
   FaSignOutAlt, FaChartLine, FaNewspaper, FaDatabase,
-  FaUserTie, FaUserGraduate, FaMosque, FaScroll,
-  FaGem, FaShieldAlt, FaBell, FaCog
+  FaUserTie, FaGem, FaBars, FaTimes
 } from 'react-icons/fa';
-import { MdDashboard, MdAnalytics } from 'react-icons/md';
+import { MdDashboard } from 'react-icons/md';
 
 function AdminPanel() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
     checkUser();
     fetchNotifications();
   }, []);
+
+  // إغلاق السايدبار عند تغيير الصفحة على الموبايل
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   async function checkUser() {
     const storedUser = localStorage.getItem('user');
@@ -69,6 +75,7 @@ function AdminPanel() {
     if (path === '/admin/benefits') return 'الفوائد العلمية';
     if (path === '/admin/ijaza') return 'الإجازات';
     if (path === '/admin/links') return 'الروابط المهمة';
+    if (path === '/admin/study-sanad') return 'دراسة الأسانيد';
     if (path === '/admin/contact') return 'إدارة التواصل';
     if (path === '/admin/users') return 'إدارة المستخدمين';
     return 'لوحة التحكم';
@@ -85,6 +92,7 @@ function AdminPanel() {
     { path: '/admin/benefits', label: 'الفوائد العلمية', icon: FaGraduationCap, color: '#0891b2' },
     { path: '/admin/ijaza', label: 'الإجازات', icon: FaCertificate, color: '#c2410c' },
     { path: '/admin/links', label: 'الروابط المهمة', icon: FaLink, color: '#4f46e5' },
+    { path: '/admin/study-sanad', label: 'دراسة الأسانيد', icon: FaChalkboardTeacher, color: '#059669' },
     { path: '/admin/contact', label: 'إدارة التواصل', icon: FaEnvelope, color: '#dc2626' },
   ];
 
@@ -95,12 +103,15 @@ function AdminPanel() {
   return (
     <div className="admin-panel-premium">
       {/* Sidebar */}
-      <aside className="admin-sidebar-premium">
+      <aside className={`admin-sidebar-premium ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="logo-premium">
             <FaGem />
             <span>توحدنا</span>
           </div>
+          <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
+            <FaTimes />
+          </button>
         </div>
         
         <div className="user-profile-premium">
@@ -110,7 +121,7 @@ function AdminPanel() {
           <div className="user-info">
             <h4>{user?.name || user?.email?.split('@')[0]}</h4>
             <span className="user-role">
-              {user?.role === 'super_admin' ? 'مدير عام' : 'مشرف'}
+              {user?.role === 'super_admin' ? '👑 مدير عام' : '📋 مشرف'}
             </span>
           </div>
         </div>
@@ -121,6 +132,7 @@ function AdminPanel() {
               key={index} 
               to={item.path}
               className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+              onClick={() => setSidebarOpen(false)}
             >
               <span className="nav-icon" style={{ color: item.color }}>
                 <item.icon />
@@ -144,9 +156,15 @@ function AdminPanel() {
         </div>
       </aside>
 
+      {/* Overlay للموبايل */}
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>}
+
       {/* Main Content */}
       <main className="admin-main-premium">
         <header className="admin-header-premium">
+          <button className="menu-toggle-btn" onClick={() => setSidebarOpen(true)}>
+            <FaBars />
+          </button>
           <div className="header-left">
             <h1>{getPageTitle()}</h1>
             <div className="breadcrumb-premium">
@@ -156,13 +174,7 @@ function AdminPanel() {
             </div>
           </div>
           <div className="header-right">
-            <button className="notifications-btn">
-              <FaBell />
-              {notifications > 0 && <span className="notification-dot">{notifications}</span>}
-            </button>
-            <button className="settings-btn">
-              <FaCog />
-            </button>
+            {/* يمكن إضافة أيقونات هنا إذا أردت */}
           </div>
         </header>
 
@@ -178,6 +190,7 @@ function AdminPanel() {
             <Route path="/benefits" element={<ManageBenefits />} />
             <Route path="/ijaza" element={<ManageIjaza />} />
             <Route path="/links" element={<ManageLinks />} />
+            <Route path="/study-sanad" element={<ManageStudySanad />} />
             <Route path="/contact" element={<ManageContact />} />
             {user?.role === 'super_admin' && (
               <Route path="/users" element={<ManageUsers />} />
@@ -187,14 +200,25 @@ function AdminPanel() {
       </main>
 
       <style>{`
-        /* Premium Admin Panel Styles */
+        /* ============================================
+           ADMIN PANEL PREMIUM STYLES
+           متوافق مع جميع الأجهزة
+        ============================================ */
+        
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
         .admin-panel-premium {
           display: flex;
           min-height: 100vh;
           background: #f0f2f5;
+          position: relative;
         }
 
-        /* Sidebar Premium */
+        /* ===== Sidebar Styles ===== */
         .admin-sidebar-premium {
           width: 280px;
           background: linear-gradient(180deg, #0d2b3e 0%, #1b4f6e 100%);
@@ -202,14 +226,35 @@ function AdminPanel() {
           display: flex;
           flex-direction: column;
           position: fixed;
+          top: 0;
+          right: 0;
           height: 100vh;
           overflow-y: auto;
-          z-index: 100;
+          z-index: 1000;
+          transition: transform 0.3s ease;
+          box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* تخصيص شريط التمرير للسايدبار */
+        .admin-sidebar-premium::-webkit-scrollbar {
+          width: 5px;
+        }
+
+        .admin-sidebar-premium::-webkit-scrollbar-track {
+          background: rgba(255,255,255,0.1);
+        }
+
+        .admin-sidebar-premium::-webkit-scrollbar-thumb {
+          background: #e8b339;
+          border-radius: 5px;
         }
 
         .sidebar-header {
           padding: 1.5rem;
           border-bottom: 1px solid rgba(255,255,255,0.1);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
         }
 
         .logo-premium {
@@ -223,6 +268,15 @@ function AdminPanel() {
 
         .logo-premium span {
           color: white;
+        }
+
+        .sidebar-close-btn {
+          display: none;
+          background: none;
+          border: none;
+          color: white;
+          font-size: 1.2rem;
+          cursor: pointer;
         }
 
         .user-profile-premium {
@@ -327,22 +381,55 @@ function AdminPanel() {
           color: white;
         }
 
-        /* Main Content Premium */
+        /* ===== Overlay للموبايل ===== */
+        .sidebar-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: 999;
+          display: none;
+        }
+
+        /* ===== Main Content Styles ===== */
         .admin-main-premium {
           flex: 1;
           margin-right: 280px;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
         }
 
         .admin-header-premium {
           background: white;
           padding: 1rem 2rem;
           display: flex;
-          justify-content: space-between;
           align-items: center;
+          gap: 1rem;
           box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           position: sticky;
           top: 0;
           z-index: 99;
+        }
+
+        .menu-toggle-btn {
+          display: none;
+          background: #f8f9fa;
+          border: none;
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          cursor: pointer;
+          color: #1b4f6e;
+          font-size: 1.2rem;
+          transition: all 0.2s ease;
+        }
+
+        .menu-toggle-btn:hover {
+          background: #e8b339;
+          color: white;
         }
 
         .header-left h1 {
@@ -362,45 +449,15 @@ function AdminPanel() {
         }
 
         .header-right {
-          display: flex;
-          gap: 0.75rem;
-        }
-
-        .notifications-btn,
-        .settings-btn {
-          background: #f8f9fa;
-          border: none;
-          width: 40px;
-          height: 40px;
-          border-radius: 12px;
-          cursor: pointer;
-          position: relative;
-          color: #1b4f6e;
-          transition: all 0.2s ease;
-        }
-
-        .notifications-btn:hover,
-        .settings-btn:hover {
-          background: #e8b339;
-          color: white;
-        }
-
-        .notification-dot {
-          position: absolute;
-          top: -5px;
-          right: -5px;
-          background: #dc2626;
-          color: white;
-          font-size: 0.7rem;
-          padding: 0.1rem 0.4rem;
-          border-radius: 50px;
+          margin-right: auto;
         }
 
         .admin-content-premium {
           padding: 2rem;
+          flex: 1;
         }
 
-        /* Loading Screen */
+        /* ===== Loading Screen ===== */
         .loading-screen-premium {
           position: fixed;
           top: 0;
@@ -433,20 +490,60 @@ function AdminPanel() {
           to { transform: rotate(360deg); }
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
+        /* ===== Responsive Styles ===== */
+        @media (max-width: 1024px) {
+          .admin-main-premium {
+            margin-right: 0;
+          }
+          
           .admin-sidebar-premium {
             transform: translateX(100%);
-            position: fixed;
-            transition: transform 0.3s ease;
           }
           
           .admin-sidebar-premium.open {
             transform: translateX(0);
           }
           
-          .admin-main-premium {
-            margin-right: 0;
+          .menu-toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .sidebar-close-btn {
+            display: block;
+          }
+          
+          .sidebar-overlay {
+            display: block;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .admin-header-premium {
+            padding: 0.75rem 1rem;
+          }
+          
+          .admin-content-premium {
+            padding: 1rem;
+          }
+          
+          .header-left h1 {
+            font-size: 1.1rem;
+          }
+          
+          .breadcrumb-premium {
+            font-size: 0.7rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .admin-content-premium {
+            padding: 0.75rem;
+          }
+          
+          .header-left h1 {
+            font-size: 1rem;
           }
         }
       `}</style>
@@ -474,7 +571,8 @@ function AdminDashboard({ user, notifications }) {
     asaneed: 0,
     sessions: 0,
     benefits: 0,
-    links: 0
+    links: 0,
+    studies: 0
   });
 
   useEffect(() => {
@@ -485,7 +583,7 @@ function AdminDashboard({ user, notifications }) {
     const [
       articlesRes, booksRes, scholarsRes, 
       messagesRes, asaneedRes, sessionsRes,
-      benefitsRes, linksRes
+      benefitsRes, linksRes, studiesRes
     ] = await Promise.all([
       supabase.from('articles').select('*', { count: 'exact', head: true }),
       supabase.from('books').select('*', { count: 'exact', head: true }),
@@ -494,7 +592,8 @@ function AdminDashboard({ user, notifications }) {
       supabase.from('asaneed').select('*', { count: 'exact', head: true }),
       supabase.from('listening_sessions').select('*', { count: 'exact', head: true }),
       supabase.from('benefits').select('*', { count: 'exact', head: true }),
-      supabase.from('important_links').select('*', { count: 'exact', head: true })
+      supabase.from('important_links').select('*', { count: 'exact', head: true }),
+      supabase.from('study_sanad').select('*', { count: 'exact', head: true })
     ]);
 
     setStats({
@@ -505,7 +604,8 @@ function AdminDashboard({ user, notifications }) {
       asaneed: asaneedRes.count || 0,
       sessions: sessionsRes.count || 0,
       benefits: benefitsRes.count || 0,
-      links: linksRes.count || 0
+      links: linksRes.count || 0,
+      studies: studiesRes.count || 0
     });
   }
 
@@ -517,6 +617,7 @@ function AdminDashboard({ user, notifications }) {
     { icon: <FaLink />, label: 'الأسانيد', value: stats.asaneed, color: '#7c3aed', bg: '#7c3aed10' },
     { icon: <FaMicrophoneAlt />, label: 'مجالس السماع', value: stats.sessions, color: '#ea580c', bg: '#ea580c10' },
     { icon: <FaGraduationCap />, label: 'الفوائد', value: stats.benefits, color: '#0891b2', bg: '#0891b210' },
+    { icon: <FaChalkboardTeacher />, label: 'دراسات الأسانيد', value: stats.studies, color: '#059669', bg: '#05966910' },
     { icon: <FaLink />, label: 'الروابط', value: stats.links, color: '#4f46e5', bg: '#4f46e510' }
   ];
 
@@ -526,12 +627,12 @@ function AdminDashboard({ user, notifications }) {
     { label: 'عالم جديد', path: '/admin/scholars', icon: <FaUserTie />, color: '#2d6a4f' },
     { label: 'سند جديد', path: '/admin/asaneed', icon: <FaLink />, color: '#7c3aed' },
     { label: 'مجلس سماع', path: '/admin/sessions', icon: <FaMicrophoneAlt />, color: '#ea580c' },
-    { label: 'فائدة جديدة', path: '/admin/benefits', icon: <FaGraduationCap />, color: '#0891b2' }
+    { label: 'فائدة جديدة', path: '/admin/benefits', icon: <FaGraduationCap />, color: '#0891b2' },
+    { label: 'دراسة سند', path: '/admin/study-sanad', icon: <FaChalkboardTeacher />, color: '#059669' }
   ];
 
   return (
     <div className="dashboard-premium">
-      {/* Welcome Banner */}
       <div className="welcome-banner-premium">
         <div className="banner-content">
           <h2>مرحباً {user?.name || user?.email?.split('@')[0]}</h2>
@@ -547,7 +648,6 @@ function AdminDashboard({ user, notifications }) {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="stats-grid-premium">
         {statCards.map((stat, index) => (
           <div key={index} className="stat-card-premium" style={{ background: stat.bg }}>
@@ -562,7 +662,6 @@ function AdminDashboard({ user, notifications }) {
         ))}
       </div>
 
-      {/* Quick Actions */}
       <div className="quick-actions-premium">
         <div className="section-header">
           <h3><FaChartLine /> إجراءات سريعة</h3>
@@ -699,7 +798,7 @@ function AdminDashboard({ user, notifications }) {
         
         .actions-grid-premium {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
           gap: 1rem;
         }
         
@@ -724,13 +823,13 @@ function AdminDashboard({ user, notifications }) {
         }
         
         .action-icon {
-          width: 32px;
-          height: 32px;
+          width: 35px;
+          height: 35px;
           border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.9rem;
+          font-size: 1rem;
           color: white;
         }
         
@@ -740,6 +839,12 @@ function AdminDashboard({ user, notifications }) {
           color: #1b4f6e;
         }
         
+        @media (max-width: 1024px) {
+          .stats-grid-premium {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        
         @media (max-width: 768px) {
           .stats-grid-premium {
             grid-template-columns: repeat(2, 1fr);
@@ -747,6 +852,11 @@ function AdminDashboard({ user, notifications }) {
           
           .actions-grid-premium {
             grid-template-columns: repeat(2, 1fr);
+          }
+          
+          .welcome-banner-premium {
+            flex-direction: column;
+            text-align: center;
           }
         }
         

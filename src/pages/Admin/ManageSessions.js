@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadFile } from '../../services/supabase';
-import { FaSave, FaTrash, FaEdit, FaTimes, FaUpload, FaImage, FaFilePdf, FaYoutube, FaCalendarAlt, FaMicrophoneAlt, FaEye } from 'react-icons/fa';
+import { FaSave, FaTrash, FaEdit, FaTimes, FaUpload, FaImage, FaFilePdf, FaYoutube, FaCalendarAlt, FaMicrophoneAlt, FaEye, FaTelegram, FaVideo, FaFacebook, FaUsers } from 'react-icons/fa';
 import dayjs from 'dayjs';
 
 function ManageSessions() {
@@ -14,6 +14,10 @@ function ManageSessions() {
     details: '',
     session_date: '',
     youtube_url: '',
+    telegram_url: '',
+    meet_url: '',
+    zoom_url: '',
+    facebook_url: '',
     image: null,
     file: null
   });
@@ -69,6 +73,10 @@ function ManageSessions() {
       details: formData.details,
       session_date: formData.session_date || null,
       youtube_url: formData.youtube_url,
+      telegram_url: formData.telegram_url,
+      meet_url: formData.meet_url,
+      zoom_url: formData.zoom_url,
+      facebook_url: formData.facebook_url,
       image_url: imageUrl,
       file_url: fileUrl
     };
@@ -102,7 +110,18 @@ function ManageSessions() {
   }
 
   function resetForm() {
-    setFormData({ title: '', details: '', session_date: '', youtube_url: '', image: null, file: null });
+    setFormData({ 
+      title: '', 
+      details: '', 
+      session_date: '', 
+      youtube_url: '', 
+      telegram_url: '',
+      meet_url: '',
+      zoom_url: '',
+      facebook_url: '',
+      image: null, 
+      file: null 
+    });
     setEditingId(null);
     setPreviewImage(null);
     setPreviewFile(null);
@@ -115,6 +134,10 @@ function ManageSessions() {
       details: session.details || '',
       session_date: session.session_date || '',
       youtube_url: session.youtube_url || '',
+      telegram_url: session.telegram_url || '',
+      meet_url: session.meet_url || '',
+      zoom_url: session.zoom_url || '',
+      facebook_url: session.facebook_url || '',
       image: null,
       file: null
     });
@@ -151,6 +174,17 @@ function ManageSessions() {
   const formatDate = (date) => {
     if (!date) return null;
     return dayjs(date).format('DD MMMM YYYY');
+  };
+
+  // قائمة الروابط لعرضها في البطاقة
+  const getAvailableLinks = (session) => {
+    const links = [];
+    if (session.youtube_url) links.push({ type: 'youtube', url: session.youtube_url, icon: FaYoutube, label: 'يوتيوب', color: '#ff0000' });
+    if (session.telegram_url) links.push({ type: 'telegram', url: session.telegram_url, icon: FaTelegram, label: 'تيليجرام', color: '#0088cc' });
+    if (session.meet_url) links.push({ type: 'meet', url: session.meet_url, icon: FaVideo, label: 'Google Meet', color: '#0f9d58' });
+    if (session.zoom_url) links.push({ type: 'zoom', url: session.zoom_url, icon: FaUsers, label: 'Zoom', color: '#0e8cff' });
+    if (session.facebook_url) links.push({ type: 'facebook', url: session.facebook_url, icon: FaFacebook, label: 'فيسبوك', color: '#1877f2' });
+    return links;
   };
 
   return (
@@ -195,14 +229,61 @@ function ManageSessions() {
                     onChange={(e) => setFormData({ ...formData, session_date: e.target.value })}
                   />
                 </div>
-                <div className="form-group-premium">
-                  <label><FaYoutube /> رابط يوتيوب</label>
-                  <input
-                    type="url"
-                    value={formData.youtube_url}
-                    onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
-                    placeholder="https://youtube.com/watch?v=..."
-                  />
+              </div>
+
+              {/* روابط إضافية */}
+              <div className="links-section">
+                <h4 className="links-title">روابط إضافية (اختيارية)</h4>
+                <div className="links-grid">
+                  <div className="form-group-premium">
+                    <label><FaYoutube style={{ color: '#ff0000' }} /> رابط يوتيوب</label>
+                    <input
+                      type="url"
+                      value={formData.youtube_url}
+                      onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
+                      placeholder="https://youtube.com/watch?v=..."
+                    />
+                  </div>
+
+                  <div className="form-group-premium">
+                    <label><FaTelegram style={{ color: '#0088cc' }} /> رابط تيليجرام</label>
+                    <input
+                      type="url"
+                      value={formData.telegram_url}
+                      onChange={(e) => setFormData({ ...formData, telegram_url: e.target.value })}
+                      placeholder="https://t.me/..."
+                    />
+                  </div>
+
+                  <div className="form-group-premium">
+                    <label><FaVideo style={{ color: '#0f9d58' }} /> رابط Google Meet</label>
+                    <input
+                      type="url"
+                      value={formData.meet_url}
+                      onChange={(e) => setFormData({ ...formData, meet_url: e.target.value })}
+                      placeholder="https://meet.google.com/..."
+                    />
+                  </div>
+
+                  <div className="form-group-premium">
+                    <label><FaUsers style={{ color: '#0e8cff' }} /> رابط Zoom</label>
+                    <input
+                      type="url"
+                      value={formData.zoom_url}
+                      onChange={(e) => setFormData({ ...formData, zoom_url: e.target.value })}
+                      placeholder="https://zoom.us/j/..."
+                    />
+                  </div>
+
+                  <div className="form-group-premium">
+                    <label><FaFacebook style={{ color: '#1877f2' }} /> رابط فيسبوك</label>
+                    <input
+                      type="url"
+                      value={formData.facebook_url}
+                      onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
+                      placeholder="https://facebook.com/..."
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -322,70 +403,92 @@ function ManageSessions() {
           </div>
         ) : (
           <div className="sessions-grid-premium">
-            {sessions.map(session => (
-              <div key={session.id} className="session-card-premium">
-                <div className="session-image">
-                  {session.image_url ? (
-                    <img src={session.image_url} alt={session.title} />
-                  ) : (
-                    <div className="image-placeholder">
-                      <FaMicrophoneAlt />
-                    </div>
-                  )}
-                </div>
-                <div className="session-details">
-                  <h4>{session.title}</h4>
-                  {session.session_date && (
-                    <div className="session-date">
-                      <FaCalendarAlt /> {formatDate(session.session_date)}
-                    </div>
-                  )}
-                  {session.details && (
-                    <p className="session-description">
-                      {session.details.length > 100 
-                        ? session.details.substring(0, 100) + '...' 
-                        : session.details}
-                    </p>
-                  )}
-                  <div className="session-meta">
-                    {session.youtube_url && (
-                      <span className="youtube-badge">
-                        <FaYoutube /> فيديو
-                      </span>
-                    )}
-                    {session.file_url && (
-                      <span className="pdf-badge">
-                        <FaFilePdf /> PDF
-                      </span>
+            {sessions.map(session => {
+              const links = getAvailableLinks(session);
+              return (
+                <div key={session.id} className="session-card-premium">
+                  <div className="session-image">
+                    {session.image_url ? (
+                      <img src={session.image_url} alt={session.title} />
+                    ) : (
+                      <div className="image-placeholder">
+                        <FaMicrophoneAlt />
+                      </div>
                     )}
                   </div>
-                  <div className="session-actions">
-                    {session.youtube_url && (
-                      <a 
-                        href={getYoutubeEmbedUrl(session.youtube_url)} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="watch-btn"
+                  <div className="session-details">
+                    <h4>{session.title}</h4>
+                    {session.session_date && (
+                      <div className="session-date">
+                        <FaCalendarAlt /> {formatDate(session.session_date)}
+                      </div>
+                    )}
+                    {session.details && (
+                      <p className="session-description">
+                        {session.details.length > 100 
+                          ? session.details.substring(0, 100) + '...' 
+                          : session.details}
+                      </p>
+                    )}
+                    
+                    {/* عرض الروابط المتاحة */}
+                    {links.length > 0 && (
+                      <div className="session-links-list">
+                        {links.map((link, idx) => (
+                          <a
+                            key={idx}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="session-link-btn"
+                            style={{ backgroundColor: link.color }}
+                          >
+                            <link.icon /> {link.label}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="session-meta">
+                      {session.youtube_url && (
+                        <span className="youtube-badge">
+                          <FaYoutube /> فيديو
+                        </span>
+                      )}
+                      {session.file_url && (
+                        <span className="pdf-badge">
+                          <FaFilePdf /> PDF
+                        </span>
+                      )}
+                    </div>
+                    <div className="session-actions">
+                      {session.youtube_url && (
+                        <a 
+                          href={getYoutubeEmbedUrl(session.youtube_url)} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="watch-btn"
+                        >
+                          <FaYoutube /> مشاهدة
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleEdit(session)}
+                        className="edit-btn"
                       >
-                        <FaYoutube /> مشاهدة
-                      </a>
-                    )}
-                    <button
-                      onClick={() => handleEdit(session)}
-                      className="edit-btn"
-                    >
-                      <FaEdit /> تعديل
-                    </button>
-                    <button
-                      onClick={() => handleDelete(session.id)}
-                      className="delete-btn"
-                    >
-                      <FaTrash /> حذف
-                    </button>
+                        <FaEdit /> تعديل
+                      </button>
+                      <button
+                        onClick={() => handleDelete(session.id)}
+                        className="delete-btn"
+                      >
+                        <FaTrash /> حذف
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -428,7 +531,7 @@ function ManageSessions() {
 
         .form-grid-premium {
           display: grid;
-          grid-template-columns: 1fr 250px;
+          grid-template-columns: 1fr 280px;
           gap: 2rem;
         }
 
@@ -469,6 +572,24 @@ function ManageSessions() {
         .form-row-premium {
           display: grid;
           grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+
+        .links-section {
+          margin-top: 1rem;
+          padding-top: 0.5rem;
+          border-top: 1px solid #e9ecef;
+        }
+
+        .links-title {
+          font-size: 0.9rem;
+          color: #1b4f6e;
+          margin-bottom: 1rem;
+        }
+
+        .links-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
           gap: 1rem;
         }
 
@@ -536,13 +657,13 @@ function ManageSessions() {
         }
 
         .file-preview svg {
-          font-size: 2.5rem;
+          font-size: 2rem;
           color: #dc2626;
         }
 
         .file-info span {
           display: block;
-          font-size: 0.85rem;
+          font-size: 0.8rem;
           color: #1b4f6e;
         }
 
@@ -554,16 +675,17 @@ function ManageSessions() {
         .remove-file-btn {
           margin-top: 0.5rem;
           width: 100%;
-          padding: 0.5rem;
+          padding: 0.4rem;
           background: #fee2e2;
           border: none;
-          border-radius: 10px;
+          border-radius: 8px;
           color: #dc2626;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.5rem;
+          gap: 0.3rem;
+          font-size: 0.75rem;
         }
 
         .form-actions-premium {
@@ -580,7 +702,7 @@ function ManageSessions() {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
+          padding: 0.7rem 1.5rem;
           border: none;
           border-radius: 12px;
           font-size: 0.9rem;
@@ -617,7 +739,7 @@ function ManageSessions() {
         /* Sessions Grid */
         .sessions-grid-premium {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
           gap: 1.5rem;
         }
 
@@ -680,6 +802,30 @@ function ManageSessions() {
           color: #6c757d;
           line-height: 1.5;
           margin-bottom: 0.75rem;
+        }
+
+        .session-links-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .session-link-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          padding: 0.25rem 0.6rem;
+          border-radius: 20px;
+          text-decoration: none;
+          font-size: 0.7rem;
+          color: white;
+          transition: all 0.2s ease;
+        }
+
+        .session-link-btn:hover {
+          opacity: 0.85;
+          transform: translateY(-1px);
         }
 
         .session-meta {
@@ -773,6 +919,10 @@ function ManageSessions() {
           }
           
           .form-row-premium {
+            grid-template-columns: 1fr;
+          }
+          
+          .links-grid {
             grid-template-columns: 1fr;
           }
           

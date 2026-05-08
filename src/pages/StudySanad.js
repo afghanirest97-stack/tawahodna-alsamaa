@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { FaSearch, FaGraduationCap, FaTimes, FaEye, FaChevronLeft, FaChevronRight, FaLink, FaDownload } from 'react-icons/fa';
+import { 
+  FaSearch, FaBook, FaCalendarAlt, FaUserShield, 
+  FaFilePdf, FaEye, FaTimes, FaChevronLeft, FaChevronRight,
+  FaInfoCircle, FaHeart, FaShare, FaGraduationCap
+} from 'react-icons/fa';
 
 function StudySanad() {
   const [studies, setStudies] = useState([]);
@@ -9,20 +13,29 @@ function StudySanad() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudy, setSelectedStudy] = useState(null);
-  
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(9);
   const [totalItems, setTotalItems] = useState(0);
+  const [siteInfo, setSiteInfo] = useState({
+    introduction: '',
+    definition: '',
+    generalReason: ''
+  });
 
   useEffect(() => {
     fetchStudies();
+    fetchSiteInfo();
   }, []);
 
   async function fetchStudies() {
     try {
       const { data, count } = await supabase
-        .from('study_sanad')
-        .select('*', { count: 'exact' })
+        .from('study_sanads')
+        .select(`
+          *,
+          users:user_id (name)
+        `, { count: 'exact' })
+        .eq('status', 'published')
         .order('created_at', { ascending: false });
       
       if (data) {
@@ -37,15 +50,25 @@ function StudySanad() {
     }
   }
 
+  async function fetchSiteInfo() {
+    // يمكن جلب هذه المعلومات من جدول الإعدادات
+    setSiteInfo({
+      introduction: 'مرحباً بكم في قسم دراسة أسانيد الحديث الشريف، حيث نقدم لكم دراسات متخصصة في علم الإسناد وأصوله.',
+      definition: 'الأسانيد هي السلسلة المتصلة من الرواة التي تصلنا إلى المصدر الأصلي للحديث النبوي الشريف، وهي من أهم علوم الحديث التي تميز بها الأمة الإسلامية.',
+      generalReason: 'تهدف هذه الدراسة إلى توثيق الأسانيد والحفاظ عليها، وفهم منهج المحدثين في قبول الروايات وردها، وتدريب طلاب العلم على أصول علم الإسناد.'
+    });
+  }
+
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredStudies(studies);
       setTotalItems(studies.length);
     } else {
       const filtered = studies.filter(item =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.content && item.content.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.sanad_chain && item.sanad_chain.toLowerCase().includes(searchTerm.toLowerCase()))
+        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.summary && item.summary.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.reason && item.reason.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredStudies(filtered);
       setTotalItems(filtered.length);
@@ -63,38 +86,46 @@ function StudySanad() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages, start + maxVisible - 1);
-    
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-    
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="studysanad-page">
+    <div className="study-sanad-page">
       <div className="container">
-        <div className="page-header-modern">
-          <h1>دراسة الأسانيد</h1>
-          <p>دراسات وبحوث في علم الإسناد وطرق التحمل والأداء</p>
+        {/* Hero Section */}
+        <div className="hero-section">
+          <div className="hero-content">
+            <h1>📖 دراسة أسانيد الحديث الشريف</h1>
+            <p>رحلة في علم الإسناد وأصول قبول الرواية</p>
+          </div>
         </div>
 
-        <div className="search-section-modern">
+        {/* Introduction Section */}
+        <div className="info-section">
+          <div className="info-card">
+            <FaInfoCircle className="info-icon" />
+            <h3>تعريف الدراسة</h3>
+            <p>{siteInfo.definition}</p>
+          </div>
+          <div className="info-card">
+            <FaGraduationCap className="info-icon" />
+            <h3>سبب الدراسة</h3>
+            <p>{siteInfo.generalReason}</p>
+          </div>
+        </div>
+
+        {/* Search Section */}
+        <div className="search-section">
           <div className="search-box">
             <FaSearch className="search-icon" />
             <input
               type="text"
-              placeholder="ابحث في دراسات الأسانيد... (العنوان أو المحتوى أو سند الدراسة)"
+              placeholder="ابحث في الدراسات... (عنوان، ملخص، وصف)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -105,98 +136,112 @@ function StudySanad() {
             )}
           </div>
           <div className="results-count">
-            تم العثور على {totalItems} دراسة
+            📚 تم العثور على {totalItems} دراسة
           </div>
         </div>
 
+        {/* Studies Grid */}
         {currentItems.length === 0 ? (
           <div className="no-results">
-            <FaGraduationCap />
-            <p>لا توجد دراسات مطابقة للبحث</p>
+            <FaBook />
+            <h3>لا توجد نتائج</h3>
+            <p>لم يتم العثور على دراسات مطابقة للبحث</p>
           </div>
         ) : (
           <>
-            <div className="studies-grid-modern">
+            <div className="studies-grid">
               {currentItems.map(study => (
-                <div key={study.id} className="study-card-modern">
-                  <div className="study-card-header">
-                    {study.image_url ? (
-                      <img src={study.image_url} alt={study.title} className="study-card-image" />
-                    ) : (
-                      <div className="study-card-icon">
-                        <FaGraduationCap />
-                      </div>
-                    )}
-                    <div className="study-card-badge">دراسة إسناد</div>
-                  </div>
-                  <div className="study-card-body">
+                <div key={study.id} className="study-card">
+                  {study.image_url && (
+                    <div className="card-image">
+                      <img src={study.image_url} alt={study.title} />
+                    </div>
+                  )}
+                  <div className="card-body">
                     <h3>{study.title}</h3>
-                    {study.sanad_chain && (
-                      <div className="study-sanad-chain">
-                        <FaLink /> سند الدراسة
-                        <p className="sanad-chain-text">
-                          {study.sanad_chain.length > 80 
-                            ? study.sanad_chain.substring(0, 80) + '...' 
-                            : study.sanad_chain}
-                        </p>
+                    {study.summary && (
+                      <p className="summary">{study.summary}</p>
+                    )}
+                    {study.reason && (
+                      <div className="reason-box">
+                        <strong>🎯 أهمية الدراسة:</strong>
+                        <p>{study.reason}</p>
                       </div>
                     )}
-                    {study.content && (
-                      <p className="study-content">
-                        {study.content.length > 100 
-                          ? study.content.substring(0, 100) + '...' 
-                          : study.content}
-                      </p>
-                    )}
+                    <div className="card-meta">
+                      <span><FaCalendarAlt /> {formatDate(study.created_at)}</span>
+                      <span><FaUserShield /> أضيف بواسطة: {study.users?.name || 'أحمد'}</span>
+                    </div>
                     {study.file_url && (
                       <a 
                         href={study.file_url} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="study-file-link"
+                        className="file-link"
                       >
-                        <FaDownload /> تحميل الدراسة
+                        <FaFilePdf /> تحميل الدراسة (PDF)
                       </a>
                     )}
                   </div>
-                  <div className="study-card-footer">
+                  <div className="card-footer">
                     <button 
-                      className="btn-view-details"
+                      className="btn-details"
                       onClick={() => setSelectedStudy(study)}
                     >
-                      <FaEye /> قراءة الدراسة
+                      <FaEye /> قراءة المزيد
                     </button>
+                    <div className="card-actions">
+                      <button className="action-btn" title="مشاركة">
+                        <FaShare />
+                      </button>
+                      <button className="action-btn" title="إعجاب">
+                        <FaHeart />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
+            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="pagination-modern">
+              <div className="pagination">
                 <button 
                   onClick={() => goToPage(currentPage - 1)} 
                   disabled={currentPage === 1}
-                  className="pagination-btn"
+                  className="page-btn"
                 >
                   <FaChevronRight /> السابق
                 </button>
                 
-                <div className="pagination-numbers">
-                  {getPageNumbers().map(page => (
-                    <button
-                      key={page}
-                      onClick={() => goToPage(page)}
-                      className={`pagination-number ${currentPage === page ? 'active' : ''}`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                <div className="page-numbers">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => goToPage(pageNum)}
+                        className={`page-number ${currentPage === pageNum ? 'active' : ''}`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
                 </div>
                 
                 <button 
                   onClick={() => goToPage(currentPage + 1)} 
                   disabled={currentPage === totalPages}
-                  className="pagination-btn"
+                  className="page-btn"
                 >
                   التالي <FaChevronLeft />
                 </button>
@@ -206,28 +251,54 @@ function StudySanad() {
         )}
       </div>
 
-      {/* Modal لعرض التفاصيل الكاملة */}
+      {/* Modal for full details */}
       {selectedStudy && (
         <div className="modal-overlay" onClick={() => setSelectedStudy(null)}>
-          <div className="modal-content-large" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setSelectedStudy(null)}>×</button>
-            <h2>{selectedStudy.title}</h2>
-            {selectedStudy.sanad_chain && (
-              <div className="modal-sanad-chain">
-                <div className="sanad-label">
-                  <FaLink /> سند الدراسة:
-                </div>
-                <div className="sanad-chain-full">
-                  {selectedStudy.sanad_chain}
-                </div>
+            
+            {selectedStudy.image_url && (
+              <div className="modal-image">
+                <img src={selectedStudy.image_url} alt={selectedStudy.title} />
               </div>
             )}
-            <div className="modal-body">
-              <p>{selectedStudy.content}</p>
+            
+            <h2>{selectedStudy.title}</h2>
+            
+            <div className="modal-meta">
+              <span><FaCalendarAlt /> {formatDate(selectedStudy.created_at)}</span>
+              <span><FaUserShield /> أضيف بواسطة: {selectedStudy.users?.name || 'أحمد'}</span>
             </div>
+            
+            {selectedStudy.reason && (
+              <div className="modal-reason">
+                <h4>🎯 أهمية الدراسة:</h4>
+                <p>{selectedStudy.reason}</p>
+              </div>
+            )}
+            
+            {selectedStudy.summary && (
+              <div className="modal-summary">
+                <h4>📝 ملخص الدراسة:</h4>
+                <p>{selectedStudy.summary}</p>
+              </div>
+            )}
+            
+            {selectedStudy.description && (
+              <div className="modal-description">
+                <h4>📖 تفاصيل الدراسة:</h4>
+                <p>{selectedStudy.description}</p>
+              </div>
+            )}
+            
             {selectedStudy.file_url && (
-              <a href={selectedStudy.file_url} target="_blank" rel="noopener noreferrer" className="btn-primary-modal">
-                <FaDownload /> تحميل الدراسة بصيغة PDF
+              <a 
+                href={selectedStudy.file_url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="modal-download"
+              >
+                <FaFilePdf /> تحميل الدراسة (PDF)
               </a>
             )}
           </div>
@@ -235,32 +306,84 @@ function StudySanad() {
       )}
 
       <style>{`
-        .page-header-modern {
+        .study-sanad-page {
+          background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+          min-height: 100vh;
+          padding-bottom: 3rem;
+        }
+
+        .container {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 0 1rem;
+        }
+
+        .hero-section {
+          background: linear-gradient(135deg, #1b4f6e 0%, #0d2b3e 100%);
+          border-radius: 30px;
+          padding: 4rem 2rem;
           text-align: center;
-          margin: 2rem 0 3rem;
+          margin: 2rem 0;
+          color: white;
         }
-        
-        .page-header-modern h1 {
+
+        .hero-content h1 {
           font-size: 2.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .hero-content p {
+          font-size: 1.2rem;
+          opacity: 0.9;
+        }
+
+        .info-section {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 2rem;
+          margin: 3rem 0;
+        }
+
+        .info-card {
+          background: white;
+          border-radius: 20px;
+          padding: 1.5rem;
+          text-align: center;
+          transition: all 0.3s;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .info-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .info-icon {
+          font-size: 2.5rem;
+          color: #e8b339;
+          margin-bottom: 1rem;
+        }
+
+        .info-card h3 {
           color: #1b4f6e;
-          margin-bottom: 0.5rem;
+          margin-bottom: 1rem;
         }
-        
-        .page-header-modern p {
+
+        .info-card p {
           color: #6c757d;
-          font-size: 1rem;
+          line-height: 1.6;
         }
-        
-        .search-section-modern {
+
+        .search-section {
           max-width: 600px;
-          margin: 0 auto 3rem;
+          margin: 2rem auto;
         }
-        
+
         .search-box {
           position: relative;
           margin-bottom: 1rem;
         }
-        
+
         .search-icon {
           position: absolute;
           right: 1rem;
@@ -268,22 +391,21 @@ function StudySanad() {
           transform: translateY(-50%);
           color: #adb5bd;
         }
-        
+
         .search-box input {
           width: 100%;
           padding: 1rem 3rem 1rem 1rem;
           border: 2px solid #e9ecef;
           border-radius: 50px;
           font-size: 1rem;
-          transition: all 0.3s ease;
+          background: white;
         }
-        
+
         .search-box input:focus {
           outline: none;
           border-color: #e8b339;
-          box-shadow: 0 0 0 3px rgba(232, 179, 57, 0.1);
         }
-        
+
         .clear-search {
           position: absolute;
           left: 1rem;
@@ -294,180 +416,192 @@ function StudySanad() {
           cursor: pointer;
           color: #adb5bd;
         }
-        
+
         .results-count {
           text-align: center;
-          font-size: 0.85rem;
           color: #6c757d;
+          font-size: 0.9rem;
         }
-        
-        .studies-grid-modern {
+
+        .studies-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
           gap: 2rem;
+          margin: 2rem 0;
         }
-        
-        .study-card-modern {
+
+        .study-card {
           background: white;
           border-radius: 20px;
           overflow: hidden;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+          transition: all 0.3s;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        
-        .study-card-modern:hover {
+
+        .study-card:hover {
           transform: translateY(-5px);
-          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
-        
-        .study-card-header {
-          position: relative;
-          height: 160px;
-          background: linear-gradient(135deg, #1b4f6e, #0d2b3e);
+
+        .card-image {
+          height: 200px;
+          overflow: hidden;
         }
-        
-        .study-card-image {
+
+        .card-image img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          transition: transform 0.3s;
         }
-        
-        .study-card-icon {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 4rem;
-          color: rgba(255,255,255,0.3);
+
+        .study-card:hover .card-image img {
+          transform: scale(1.05);
         }
-        
-        .study-card-badge {
-          position: absolute;
-          bottom: -12px;
-          right: 20px;
-          background: #e8b339;
-          color: #1b4f6e;
-          padding: 0.25rem 1rem;
-          border-radius: 50px;
-          font-size: 0.7rem;
-          font-weight: 600;
-        }
-        
-        .study-card-body {
+
+        .card-body {
           padding: 1.5rem;
         }
-        
-        .study-card-body h3 {
+
+        .card-body h3 {
           font-size: 1.2rem;
           color: #1b4f6e;
-          margin-bottom: 0.5rem;
-          line-height: 1.4;
-        }
-        
-        .study-sanad-chain {
-          background: #f8f9fa;
-          padding: 0.5rem 0.75rem;
-          border-radius: 12px;
           margin-bottom: 0.75rem;
-          font-size: 0.75rem;
-          color: #e8b339;
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
         }
-        
-        .study-sanad-chain p {
+
+        .summary {
           color: #6c757d;
-          font-size: 0.8rem;
-          margin: 0;
-          line-height: 1.5;
-        }
-        
-        .study-content {
-          color: #6c757d;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           line-height: 1.6;
           margin-bottom: 1rem;
         }
-        
-        .study-file-link {
+
+        .reason-box {
+          background: #fef3e2;
+          padding: 0.75rem;
+          border-radius: 12px;
+          margin: 1rem 0;
+          border-right: 3px solid #e8b339;
+        }
+
+        .reason-box strong {
+          color: #e8b339;
+          font-size: 0.8rem;
+        }
+
+        .reason-box p {
+          color: #495057;
+          font-size: 0.8rem;
+          margin-top: 0.5rem;
+        }
+
+        .card-meta {
+          display: flex;
+          gap: 1rem;
+          font-size: 0.7rem;
+          color: #adb5bd;
+          margin: 1rem 0;
+          flex-wrap: wrap;
+        }
+
+        .card-meta span {
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .file-link {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          background: #f8f9fa;
-          color: #1b4f6e;
-          padding: 0.3rem 0.8rem;
-          border-radius: 50px;
+          color: #e8b339;
           text-decoration: none;
-          font-size: 0.75rem;
-          border: 1px solid #e9ecef;
+          font-size: 0.85rem;
+          margin-top: 1rem;
         }
-        
-        .study-card-footer {
+
+        .card-footer {
           padding: 1rem 1.5rem 1.5rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           border-top: 1px solid #e9ecef;
         }
-        
-        .btn-view-details {
-          width: 100%;
+
+        .btn-details {
           background: #f8f9fa;
           border: none;
-          padding: 0.6rem;
-          border-radius: 50px;
+          padding: 0.5rem 1rem;
+          border-radius: 10px;
           color: #1b4f6e;
           cursor: pointer;
-          transition: all 0.2s ease;
           display: flex;
           align-items: center;
-          justify-content: center;
           gap: 0.5rem;
+          transition: all 0.2s;
         }
-        
-        .btn-view-details:hover {
+
+        .btn-details:hover {
           background: #e8b339;
           color: white;
         }
-        
-        .pagination-modern {
+
+        .card-actions {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .action-btn {
+          background: none;
+          border: none;
+          color: #adb5bd;
+          cursor: pointer;
+          font-size: 1rem;
+          transition: color 0.2s;
+        }
+
+        .action-btn:hover {
+          color: #e8b339;
+        }
+
+        .pagination {
           display: flex;
           justify-content: center;
           align-items: center;
           gap: 1rem;
-          margin-top: 3rem;
-          padding: 2rem 0;
+          margin: 3rem 0;
+          flex-wrap: wrap;
         }
-        
-        .pagination-btn {
+
+        .page-btn {
+          padding: 0.5rem 1rem;
           background: white;
           border: 1px solid #e9ecef;
-          padding: 0.5rem 1rem;
-          border-radius: 50px;
+          border-radius: 8px;
           cursor: pointer;
-          transition: all 0.2s ease;
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          color: #1b4f6e;
+          transition: all 0.2s;
         }
-        
-        .pagination-btn:hover:not(:disabled) {
+
+        .page-btn:hover:not(:disabled) {
           background: #e8b339;
-          border-color: #e8b339;
           color: white;
+          border-color: #e8b339;
         }
-        
-        .pagination-btn:disabled {
+
+        .page-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
-        
-        .pagination-numbers {
+
+        .page-numbers {
           display: flex;
           gap: 0.5rem;
         }
-        
-        .pagination-number {
+
+        .page-number {
           width: 40px;
           height: 40px;
           display: flex;
@@ -475,136 +609,147 @@ function StudySanad() {
           justify-content: center;
           background: white;
           border: 1px solid #e9ecef;
-          border-radius: 50%;
+          border-radius: 8px;
           cursor: pointer;
-          transition: all 0.2s ease;
-          color: #1b4f6e;
+          transition: all 0.2s;
         }
-        
-        .pagination-number:hover {
+
+        .page-number:hover {
           border-color: #e8b339;
           color: #e8b339;
         }
-        
-        .pagination-number.active {
+
+        .page-number.active {
           background: #e8b339;
           border-color: #e8b339;
           color: white;
         }
-        
+
         .no-results {
           text-align: center;
           padding: 4rem;
-          color: #adb5bd;
+          background: white;
+          border-radius: 20px;
+          margin: 2rem 0;
         }
-        
+
         .no-results svg {
-          font-size: 3rem;
+          font-size: 4rem;
+          color: #dee2e6;
           margin-bottom: 1rem;
         }
-        
+
+        /* Modal */
         .modal-overlay {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0,0,0,0.7);
+          background: rgba(0,0,0,0.8);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 2000;
+          padding: 1rem;
         }
-        
-        .modal-content-large {
+
+        .modal-content {
           background: white;
           border-radius: 24px;
-          max-width: 800px;
-          width: 90%;
-          max-height: 85vh;
+          max-width: 700px;
+          width: 100%;
+          max-height: 90vh;
           overflow-y: auto;
-          padding: 2rem;
           position: relative;
-          animation: modalFadeIn 0.3s ease;
         }
-        
-        @keyframes modalFadeIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        
+
         .modal-close {
-          position: absolute;
+          position: sticky;
           top: 1rem;
           left: 1rem;
-          background: none;
+          float: left;
+          width: 35px;
+          height: 35px;
+          background: #f8f9fa;
           border: none;
+          border-radius: 50%;
           font-size: 1.5rem;
           cursor: pointer;
-          color: #adb5bd;
-        }
-        
-        .modal-sanad-chain {
-          background: #f8f9fa;
-          padding: 1rem;
-          border-radius: 16px;
-          margin: 1rem 0;
-        }
-        
-        .sanad-label {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          color: #e8b339;
-          font-size: 0.85rem;
-          font-weight: 600;
+          justify-content: center;
+          margin: 1rem;
+        }
+
+        .modal-image {
+          width: 100%;
+          max-height: 300px;
+          overflow: hidden;
+        }
+
+        .modal-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .modal-content h2 {
+          padding: 0 1.5rem;
+          color: #1b4f6e;
+          clear: both;
+        }
+
+        .modal-meta {
+          display: flex;
+          gap: 1rem;
+          padding: 1rem 1.5rem;
+          color: #6c757d;
+          font-size: 0.8rem;
+        }
+
+        .modal-reason, .modal-summary, .modal-description {
+          padding: 1rem 1.5rem;
+          border-top: 1px solid #f0f2f5;
+        }
+
+        .modal-reason h4, .modal-summary h4, .modal-description h4 {
+          color: #1b4f6e;
           margin-bottom: 0.5rem;
         }
-        
-        .sanad-chain-full {
-          color: #4a5568;
-          font-size: 0.9rem;
-          line-height: 1.8;
-          font-family: 'Amiri', serif;
-          padding-right: 1rem;
-          border-right: 3px solid #e8b339;
-        }
-        
-        .modal-body p {
-          color: #4a5568;
-          line-height: 1.8;
-          white-space: pre-wrap;
-        }
-        
-        .btn-primary-modal {
-          display: inline-flex;
+
+        .modal-download {
+          display: flex;
           align-items: center;
+          justify-content: center;
           gap: 0.5rem;
           background: #e8b339;
           color: #1b4f6e;
-          padding: 0.6rem 1.5rem;
-          border-radius: 50px;
+          padding: 0.75rem;
+          margin: 1.5rem;
+          border-radius: 12px;
           text-decoration: none;
-          transition: all 0.2s ease;
-          margin-top: 1rem;
+          font-weight: 600;
         }
-        
-        .btn-primary-modal:hover {
-          background: #d4a32a;
-        }
-        
+
         @media (max-width: 768px) {
-          .studies-grid-modern {
+          .hero-content h1 {
+            font-size: 1.5rem;
+          }
+          
+          .hero-content p {
+            font-size: 1rem;
+          }
+          
+          .studies-grid {
             grid-template-columns: 1fr;
           }
           
-          .pagination-numbers {
+          .info-section {
+            grid-template-columns: 1fr;
+          }
+          
+          .page-numbers {
             display: none;
           }
         }

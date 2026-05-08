@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { FaSearch, FaMicrophoneAlt, FaTimes, FaEye, FaChevronLeft, FaChevronRight, FaCalendarAlt, FaYoutube, FaDownload } from 'react-icons/fa';
+import { FaSearch, FaMicrophoneAlt, FaTimes, FaEye, FaChevronLeft, FaChevronRight, FaCalendarAlt, FaYoutube, FaDownload, FaTelegram, FaVideo, FaFacebook, FaUsers } from 'react-icons/fa';
 import dayjs from 'dayjs';
 
 function ListeningSessions() {
@@ -81,18 +81,86 @@ function ListeningSessions() {
 
   const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
+    
+    let videoId = null;
+    
     if (url.includes('youtube.com/watch?v=')) {
-      return url.replace('watch?v=', 'embed/');
+      videoId = url.split('v=')[1]?.split('&')[0];
     }
-    if (url.includes('youtu.be/')) {
-      return url.replace('youtu.be/', 'www.youtube.com/embed/');
+    else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0];
     }
-    return url;
+    else if (url.includes('youtube.com/shorts/')) {
+      videoId = url.split('shorts/')[1]?.split('?')[0];
+    }
+    else if (url.includes('youtube.com/embed/')) {
+      videoId = url.split('embed/')[1]?.split('?')[0];
+    }
+    
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    return null;
+  };
+
+  // دالة لتنظيف النص من أكواد HTML
+  const cleanText = (text) => {
+    if (!text) return '';
+    return text.replace(/<[^>]*>/g, '');
+  };
+
+  // دالة لتحويل النص إلى روابط قابلة للنقر
+  const formatTextWithLinks = (text) => {
+    let clean = cleanText(text);
+    if (!clean) return '';
+    
+    let formattedText = clean;
+    
+    // تحويل روابط التيليجرام
+    formattedText = formattedText.replace(
+      /(https?:\/\/t\.me\/[^\s]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="modal-link">$1</a>'
+    );
+    
+    // تحويل روابط يوتيوب
+    formattedText = formattedText.replace(
+      /(https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="modal-link">$1</a>'
+    );
+    
+    // تحويل روابط الواتساب
+    formattedText = formattedText.replace(
+      /(https?:\/\/wa\.me\/[^\s]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="modal-link">$1</a>'
+    );
+    
+    // تحويل جميع الروابط الأخرى
+    formattedText = formattedText.replace(
+      /(https?:\/\/[^\s]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="modal-link">$1</a>'
+    );
+    
+    // تحويل الأسطر الجديدة إلى <br/>
+    formattedText = formattedText.replace(/\n/g, '<br/>');
+    
+    return formattedText;
   };
 
   const formatDate = (date) => {
     if (!date) return null;
     return dayjs(date).format('DD MMMM YYYY');
+  };
+
+  // دالة للحصول على الروابط المتاحة فقط
+  const getAvailableLinks = (session) => {
+    const links = [];
+    if (session.youtube_url) links.push({ type: 'youtube', url: session.youtube_url, icon: FaYoutube, label: 'يوتيوب', color: '#ff0000' });
+    if (session.telegram_url) links.push({ type: 'telegram', url: session.telegram_url, icon: FaTelegram, label: 'تيليجرام', color: '#0088cc' });
+    if (session.meet_url) links.push({ type: 'meet', url: session.meet_url, icon: FaVideo, label: 'Google Meet', color: '#0f9d58' });
+    if (session.zoom_url) links.push({ type: 'zoom', url: session.zoom_url, icon: FaUsers, label: 'Zoom', color: '#0e8cff' });
+    if (session.facebook_url) links.push({ type: 'facebook', url: session.facebook_url, icon: FaFacebook, label: 'فيسبوك', color: '#1877f2' });
+    return links;
   };
 
   if (loading) return <LoadingSpinner />;
@@ -133,65 +201,72 @@ function ListeningSessions() {
         ) : (
           <>
             <div className="sessions-grid-modern">
-              {currentItems.map(session => (
-                <div key={session.id} className="session-card-modern">
-                  <div className="session-card-header">
-                    {session.image_url ? (
-                      <img src={session.image_url} alt={session.title} className="session-card-image" />
-                    ) : (
-                      <div className="session-card-icon">
-                        <FaMicrophoneAlt />
-                      </div>
-                    )}
-                    <div className="session-card-badge">مجلس سماع</div>
-                  </div>
-                  <div className="session-card-body">
-                    <h3>{session.title}</h3>
-                    {session.session_date && (
-                      <div className="session-date">
-                        <FaCalendarAlt /> {formatDate(session.session_date)}
-                      </div>
-                    )}
-                    {session.details && (
-                      <p className="session-details">
-                        {session.details.length > 100 
-                          ? session.details.substring(0, 100) + '...' 
-                          : session.details}
-                      </p>
-                    )}
-                    <div className="session-links">
-                      {session.youtube_url && (
-                        <a 
-                          href={session.youtube_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="session-youtube-link"
-                        >
-                          <FaYoutube /> مشاهدة التسجيل
-                        </a>
+              {currentItems.map(session => {
+                const links = getAvailableLinks(session);
+                return (
+                  <div key={session.id} className="session-card-modern">
+                    <div className="session-card-header">
+                      {session.image_url ? (
+                        <img src={session.image_url} alt={session.title} className="session-card-image" />
+                      ) : (
+                        <div className="session-card-icon">
+                          <FaMicrophoneAlt />
+                        </div>
                       )}
-                      {session.file_url && (
-                        <a 
-                          href={session.file_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="session-file-link"
-                        >
-                          <FaDownload /> تحميل المرفقات
-                        </a>
+                      <div className="session-card-badge">مجلس سماع</div>
+                    </div>
+                    <div className="session-card-body">
+                      <h3>{session.title}</h3>
+                      {session.session_date && (
+                        <div className="session-date">
+                          <FaCalendarAlt /> {formatDate(session.session_date)}
+                        </div>
                       )}
+                      {session.details && (
+                        <p className="session-details">
+                          {session.details.length > 100 
+                            ? session.details.substring(0, 100) + '...' 
+                            : session.details}
+                        </p>
+                      )}
+                      
+                      {/* عرض الروابط المتاحة فقط */}
+                      {links.length > 0 && (
+                        <div className="session-links">
+                          {links.map((link, idx) => (
+                            <a 
+                              key={idx}
+                              href={link.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="session-link-btn"
+                              style={{ backgroundColor: link.color }}
+                            >
+                              <link.icon /> {link.label}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="session-meta">
+                        {session.file_url && (
+                          <span className="pdf-badge">
+                            <FaDownload /> PDF
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="session-card-footer">
+                      <button 
+                        className="btn-view-details"
+                        onClick={() => setSelectedSession(session)}
+                      >
+                        <FaEye /> عرض التفاصيل
+                      </button>
                     </div>
                   </div>
-                  <div className="session-card-footer">
-                    <button 
-                      className="btn-view-details"
-                      onClick={() => setSelectedSession(session)}
-                    >
-                      <FaEye /> عرض التفاصيل
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {totalPages > 1 && (
@@ -240,32 +315,68 @@ function ListeningSessions() {
                 <FaCalendarAlt /> {formatDate(selectedSession.session_date)}
               </div>
             )}
+            
             <div className="modal-body">
-              <p>{selectedSession.details}</p>
+              <div 
+                className="modal-description"
+                dangerouslySetInnerHTML={{ 
+                  __html: formatTextWithLinks(selectedSession.details)
+                }}
+              />
             </div>
-            {selectedSession.youtube_url && (
-              <div className="modal-video">
-                <iframe
-                  src={getYoutubeEmbedUrl(selectedSession.youtube_url)}
-                  title={selectedSession.title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              </div>
-            )}
-            <div className="modal-actions">
-              {selectedSession.youtube_url && (
-                <a href={selectedSession.youtube_url} target="_blank" rel="noopener noreferrer" className="btn-primary-modal">
-                  <FaYoutube /> فتح على يوتيوب
-                </a>
-              )}
-              {selectedSession.file_url && (
+            
+            {/* عرض جميع الروابط المتاحة في المودال */}
+            {(() => {
+              const modalLinks = getAvailableLinks(selectedSession);
+              if (modalLinks.length > 0) {
+                return (
+                  <div className="modal-links-section">
+                    <h4>روابط المجلس:</h4>
+                    <div className="modal-links-list">
+                      {modalLinks.map((link, idx) => (
+                        <a
+                          key={idx}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="modal-link-btn"
+                          style={{ backgroundColor: link.color }}
+                        >
+                          <link.icon /> {link.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+            
+            {selectedSession.youtube_url && (() => {
+              const embedUrl = getYoutubeEmbedUrl(selectedSession.youtube_url);
+              if (embedUrl) {
+                return (
+                  <div className="modal-video">
+                    <iframe
+                      src={embedUrl}
+                      title={selectedSession.title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+            
+            {selectedSession.file_url && (
+              <div className="modal-actions">
                 <a href={selectedSession.file_url} target="_blank" rel="noopener noreferrer" className="btn-primary-modal">
                   <FaDownload /> تحميل المرفقات
                 </a>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -339,7 +450,7 @@ function ListeningSessions() {
         
         .sessions-grid-modern {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
           gap: 2rem;
         }
         
@@ -424,31 +535,41 @@ function ListeningSessions() {
           display: flex;
           gap: 0.75rem;
           flex-wrap: wrap;
+          margin-bottom: 0.75rem;
         }
         
-        .session-youtube-link {
+        .session-link-btn {
           display: inline-flex;
           align-items: center;
-          gap: 0.5rem;
-          background: #ff0000;
+          gap: 0.4rem;
+          padding: 0.3rem 0.8rem;
+          border-radius: 50px;
+          text-decoration: none;
+          font-size: 0.7rem;
           color: white;
-          padding: 0.3rem 0.8rem;
-          border-radius: 50px;
-          text-decoration: none;
-          font-size: 0.75rem;
+          transition: all 0.2s ease;
         }
         
-        .session-file-link {
+        .session-link-btn:hover {
+          opacity: 0.85;
+          transform: translateY(-2px);
+        }
+        
+        .session-meta {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+        }
+        
+        .pdf-badge {
+          font-size: 0.65rem;
+          padding: 0.15rem 0.5rem;
+          border-radius: 20px;
+          background: #dc262620;
+          color: #dc2626;
           display: inline-flex;
           align-items: center;
-          gap: 0.5rem;
-          background: #f8f9fa;
-          color: #1b4f6e;
-          padding: 0.3rem 0.8rem;
-          border-radius: 50px;
-          text-decoration: none;
-          font-size: 0.75rem;
-          border: 1px solid #e9ecef;
+          gap: 0.3rem;
         }
         
         .session-card-footer {
@@ -609,6 +730,57 @@ function ListeningSessions() {
           margin: 0.5rem 0 1rem;
         }
         
+        .modal-description {
+          line-height: 1.8;
+          color: #4a5568;
+        }
+        
+        .modal-link {
+          color: #e8b339;
+          text-decoration: underline;
+          word-break: break-all;
+        }
+        
+        .modal-link:hover {
+          color: #c99a1a;
+        }
+        
+        .modal-links-section {
+          margin: 1rem 0;
+          padding: 1rem;
+          background: #f8f9fa;
+          border-radius: 12px;
+        }
+        
+        .modal-links-section h4 {
+          font-size: 0.85rem;
+          color: #1b4f6e;
+          margin-bottom: 0.75rem;
+        }
+        
+        .modal-links-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+        
+        .modal-link-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.4rem 1rem;
+          border-radius: 50px;
+          text-decoration: none;
+          font-size: 0.8rem;
+          color: white;
+          transition: all 0.2s ease;
+        }
+        
+        .modal-link-btn:hover {
+          opacity: 0.85;
+          transform: translateY(-2px);
+        }
+        
         .modal-video {
           margin: 1rem 0;
         }
@@ -619,14 +791,8 @@ function ListeningSessions() {
           border-radius: 16px;
         }
         
-        .modal-body p {
-          color: #4a5568;
-          line-height: 1.8;
-          white-space: pre-wrap;
-        }
-        
         .modal-actions {
-          margin-top: 1.5rem;
+          margin-top: 1rem;
           display: flex;
           gap: 1rem;
           flex-wrap: wrap;
@@ -659,6 +825,14 @@ function ListeningSessions() {
           
           .modal-video iframe {
             height: 200px;
+          }
+          
+          .modal-links-list {
+            flex-direction: column;
+          }
+          
+          .modal-link-btn {
+            justify-content: center;
           }
         }
       `}</style>

@@ -38,6 +38,7 @@ function Header() {
     { path: '/books', label: 'الكتب العلمية' },
     { path: '/benefits', label: 'فوائد علمية' },
     { path: '/ijaza', label: 'الإجازات' },
+    { path: '/membership', label: 'تسجيل العضوية' },
     { path: '/contact', label: 'تواصل معنا' },
     { path: '/links', label: 'روابط مهمة' },
   ];
@@ -234,7 +235,6 @@ function Header() {
           transform: translateY(-2px);
         }
         
-        /* ========== RESPONSIVE - تصحيح مشكلة القائمة في الهاتف ========== */
         @media (max-width: 768px) {
           .header-container {
             padding: 0 1rem;
@@ -251,7 +251,7 @@ function Header() {
             top: 100%;
             left: 0;
             right: 0;
-            background: #1b4f6e;  /* خلفية زرقاء غامقة */
+            background: #1b4f6e;
             flex-direction: column;
             padding: 1rem;
             gap: 0.5rem;
@@ -269,7 +269,7 @@ function Header() {
             text-align: center;
             padding: 0.75rem;
             font-size: 1rem;
-            color: white !important;  /* النص أبيض */
+            color: white !important;
             background: transparent;
           }
           
