@@ -78,6 +78,18 @@ function Scholars() {
     return pages;
   };
 
+  // دالة لتنسيق التاريخ (إظهار الوفاة فقط إذا كانت موجودة)
+  const formatDates = (scholar) => {
+    const parts = [];
+    if (scholar.birth_year && scholar.birth_year !== '0000' && scholar.birth_year !== '0') {
+      parts.push(`ولد: ${scholar.birth_year}`);
+    }
+    if (scholar.death_year && scholar.death_year !== '0000' && scholar.death_year !== '0') {
+      parts.push(`توفي: ${scholar.death_year}`);
+    }
+    return parts.join(' | ');
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -120,7 +132,20 @@ function Scholars() {
                 <div key={scholar.id} className="scholar-card-modern">
                   <div className="scholar-card-header">
                     {scholar.image_url ? (
-                      <img src={scholar.image_url} alt={scholar.name} className="scholar-card-image" />
+                      <div className="scholar-image-wrapper">
+                        <img 
+                          src={scholar.image_url} 
+                          alt={scholar.name} 
+                          className="scholar-card-image"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.querySelector('.scholar-card-icon').style.display = 'flex';
+                          }}
+                        />
+                        <div className="scholar-card-icon" style={{ display: 'none' }}>
+                          <FaUserTie />
+                        </div>
+                      </div>
                     ) : (
                       <div className="scholar-card-icon">
                         <FaUserTie />
@@ -130,14 +155,10 @@ function Scholars() {
                   </div>
                   <div className="scholar-card-body">
                     <h3>{scholar.name}</h3>
-                    {(scholar.birth_year || scholar.death_year) && (
+                    {(scholar.birth_year || scholar.death_year) && formatDates(scholar) && (
                       <div className="scholar-dates">
                         <FaCalendarAlt />
-                        <span>
-                          {scholar.birth_year && `ولد: ${scholar.birth_year}`}
-                          {scholar.birth_year && scholar.death_year && ' | '}
-                          {scholar.death_year && `توفي: ${scholar.death_year}`}
-                        </span>
+                        <span>{formatDates(scholar)}</span>
                       </div>
                     )}
                     {scholar.biography && (
@@ -213,15 +234,24 @@ function Scholars() {
             
             <div className="modal-header">
               {selectedScholar.image_url && (
-                <img src={selectedScholar.image_url} alt={selectedScholar.name} className="modal-image" />
+                <div className="modal-image-wrapper">
+                  <img 
+                    src={selectedScholar.image_url} 
+                    alt={selectedScholar.name} 
+                    className="modal-image"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
               )}
               <div className="modal-title">
                 <h2>{selectedScholar.name}</h2>
                 {(selectedScholar.birth_year || selectedScholar.death_year) && (
                   <p className="modal-dates">
-                    {selectedScholar.birth_year && `المولد: ${selectedScholar.birth_year}`}
+                    {selectedScholar.birth_year && selectedScholar.birth_year !== '0000' && selectedScholar.birth_year !== '0' && `المولد: ${selectedScholar.birth_year}`}
                     {selectedScholar.birth_year && selectedScholar.death_year && ' • '}
-                    {selectedScholar.death_year && `الوفاة: ${selectedScholar.death_year}`}
+                    {selectedScholar.death_year && selectedScholar.death_year !== '0000' && selectedScholar.death_year !== '0' && `الوفاة: ${selectedScholar.death_year}`}
                   </p>
                 )}
               </div>
@@ -309,13 +339,13 @@ function Scholars() {
         
         .scholars-grid-modern {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
           gap: 2rem;
         }
         
         .scholar-card-modern {
           background: white;
-          border-radius: 20px;
+          border-radius: 28px;
           overflow: hidden;
           transition: all 0.3s ease;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -328,24 +358,40 @@ function Scholars() {
         
         .scholar-card-header {
           position: relative;
-          height: 200px;
+          padding: 1.5rem;
           background: linear-gradient(135deg, #1b4f6e, #0d2b3e);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .scholar-image-wrapper {
+          width: 260px;
+          height: 260px;
+          border-radius: 50%;
+          overflow: hidden;
+          border: 5px solid #e8b339;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          background: #f8f9fa;
         }
         
         .scholar-card-image {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
+          background: #f8f9fa;
         }
         
         .scholar-card-icon {
-          width: 100%;
-          height: 100%;
+          width: 260px;
+          height: 260px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 4rem;
-          color: rgba(255,255,255,0.3);
+          font-size: 7rem;
+          color: rgba(255,255,255,0.4);
+          background: #1b4f6e;
+          border-radius: 50%;
         }
         
         .scholar-card-badge {
@@ -365,29 +411,33 @@ function Scholars() {
         }
         
         .scholar-card-body h3 {
-          font-size: 1.2rem;
+          font-size: 1.4rem;
           color: #1b4f6e;
           margin-bottom: 0.5rem;
           line-height: 1.4;
+          text-align: center;
         }
         
         .scholar-dates {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          font-size: 0.75rem;
+          font-size: 0.85rem;
           background: #f8f9fa;
-          padding: 0.2rem 0.8rem;
+          padding: 0.3rem 1rem;
           border-radius: 50px;
           color: #e8b339;
           margin-bottom: 0.75rem;
+          justify-content: center;
+          width: 100%;
         }
         
         .scholar-biography {
           color: #6c757d;
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           line-height: 1.6;
           margin-bottom: 1rem;
+          text-align: center;
         }
         
         .scholar-file-link {
@@ -401,6 +451,8 @@ function Scholars() {
           text-decoration: none;
           font-size: 0.75rem;
           border: 1px solid #e9ecef;
+          width: 100%;
+          justify-content: center;
         }
         
         .scholar-card-footer {
@@ -557,12 +609,20 @@ function Scholars() {
           align-items: center;
         }
         
-        .modal-image {
-          width: 100px;
-          height: 100px;
+        .modal-image-wrapper {
+          width: 180px;
+          height: 180px;
           border-radius: 50%;
-          object-fit: cover;
+          overflow: hidden;
+          flex-shrink: 0;
           border: 3px solid #e8b339;
+          background: #f8f9fa;
+        }
+        
+        .modal-image {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
         
         .modal-title h2 {
@@ -611,6 +671,21 @@ function Scholars() {
           .modal-header {
             flex-direction: column;
             text-align: center;
+          }
+          
+          .modal-image-wrapper {
+            margin: 0 auto;
+          }
+          
+          .scholar-image-wrapper {
+            width: 200px;
+            height: 200px;
+          }
+          
+          .scholar-card-icon {
+            width: 200px;
+            height: 200px;
+            font-size: 6rem;
           }
         }
       `}</style>
