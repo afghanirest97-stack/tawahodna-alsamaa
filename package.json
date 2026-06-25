@@ -11,6 +11,8 @@
     "axios": "^1.16.0",
     "dayjs": "^1.11.20",
     "framer-motion": "^12.38.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.75.0",
@@ -18,7 +20,8 @@
     "react-icons": "^5.6.0",
     "react-router-dom": "^7.15.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "webpack serve --mode development",
@@ -44,7 +47,12 @@
   },
   "description": "موقع توحدنا للسماع - منصة لنشر الأسانيد المتصلة والتراث الإسلامي",
   "main": "index.js",
-  "keywords": ["اسانيد", "حديث", "تراث", "سماع"],
+  "keywords": [
+    "اسانيد",
+    "حديث",
+    "تراث",
+    "سماع"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {

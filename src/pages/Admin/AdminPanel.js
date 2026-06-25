@@ -1,3 +1,4 @@
+// AdminPanel.js - مع إضافة مولد الإجازات (معدل)
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
@@ -10,6 +11,7 @@ import ManageBooks from './ManageBooks';
 import ManageSessions from './ManageSessions';
 import ManageBenefits from './ManageBenefits';
 import ManageIjaza from './ManageIjaza';
+import IjazaGenerator from './IjazaGenerator';
 import ManageLinks from './ManageLinks';
 import ManageStudySanad from './ManageStudySanad';
 import ManageUsers from './ManageUsers';
@@ -18,7 +20,7 @@ import {
   FaImage, FaLink, FaChalkboardTeacher, 
   FaMicrophoneAlt, FaGraduationCap, FaCertificate,
   FaSignOutAlt, FaChartLine, FaNewspaper, FaDatabase,
-  FaUserTie, FaGem, FaBars, FaTimes
+  FaUserTie, FaGem, FaBars, FaTimes, FaMagic
 } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 
@@ -74,6 +76,7 @@ function AdminPanel() {
     if (path === '/admin/sessions') return 'مجالس السماع';
     if (path === '/admin/benefits') return 'الفوائد العلمية';
     if (path === '/admin/ijaza') return 'الإجازات';
+    if (path === '/admin/ijaza-generator') return '🧙 مولد الإجازات';
     if (path === '/admin/links') return 'الروابط المهمة';
     if (path === '/admin/study-sanad') return 'دراسة الأسانيد';
     if (path === '/admin/contact') return 'إدارة التواصل';
@@ -91,6 +94,7 @@ function AdminPanel() {
     { path: '/admin/sessions', label: 'مجالس السماع', icon: FaMicrophoneAlt, color: '#ea580c' },
     { path: '/admin/benefits', label: 'الفوائد العلمية', icon: FaGraduationCap, color: '#0891b2' },
     { path: '/admin/ijaza', label: 'الإجازات', icon: FaCertificate, color: '#c2410c' },
+    { path: '/admin/ijaza-generator', label: '🧙 مولد الإجازات', icon: FaMagic, color: '#8e44ad' },
     { path: '/admin/links', label: 'الروابط المهمة', icon: FaLink, color: '#4f46e5' },
     { path: '/admin/study-sanad', label: 'دراسة الأسانيد', icon: FaChalkboardTeacher, color: '#059669' },
     { path: '/admin/contact', label: 'إدارة التواصل', icon: FaEnvelope, color: '#dc2626' },
@@ -189,6 +193,7 @@ function AdminPanel() {
             <Route path="/sessions" element={<ManageSessions />} />
             <Route path="/benefits" element={<ManageBenefits />} />
             <Route path="/ijaza" element={<ManageIjaza />} />
+            <Route path="/ijaza-generator" element={<IjazaGenerator />} />
             <Route path="/links" element={<ManageLinks />} />
             <Route path="/study-sanad" element={<ManageStudySanad />} />
             <Route path="/contact" element={<ManageContact />} />
@@ -235,7 +240,6 @@ function AdminPanel() {
           box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
 
-        /* تخصيص شريط التمرير للسايدبار */
         .admin-sidebar-premium::-webkit-scrollbar {
           width: 5px;
         }
@@ -381,7 +385,6 @@ function AdminPanel() {
           color: white;
         }
 
-        /* ===== Overlay للموبايل ===== */
         .sidebar-overlay {
           position: fixed;
           top: 0;
@@ -393,7 +396,6 @@ function AdminPanel() {
           display: none;
         }
 
-        /* ===== Main Content Styles ===== */
         .admin-main-premium {
           flex: 1;
           margin-right: 280px;
@@ -457,7 +459,6 @@ function AdminPanel() {
           flex: 1;
         }
 
-        /* ===== Loading Screen ===== */
         .loading-screen-premium {
           position: fixed;
           top: 0;
@@ -490,7 +491,6 @@ function AdminPanel() {
           to { transform: rotate(360deg); }
         }
 
-        /* ===== Responsive Styles ===== */
         @media (max-width: 1024px) {
           .admin-main-premium {
             margin-right: 0;
@@ -628,7 +628,8 @@ function AdminDashboard({ user, notifications }) {
     { label: 'سند جديد', path: '/admin/asaneed', icon: <FaLink />, color: '#7c3aed' },
     { label: 'مجلس سماع', path: '/admin/sessions', icon: <FaMicrophoneAlt />, color: '#ea580c' },
     { label: 'فائدة جديدة', path: '/admin/benefits', icon: <FaGraduationCap />, color: '#0891b2' },
-    { label: 'دراسة سند', path: '/admin/study-sanad', icon: <FaChalkboardTeacher />, color: '#059669' }
+    { label: 'دراسة سند', path: '/admin/study-sanad', icon: <FaChalkboardTeacher />, color: '#059669' },
+    { label: '🧙 مولد إجازات', path: '/admin/ijaza-generator', icon: <FaMagic />, color: '#8e44ad' }
   ];
 
   return (

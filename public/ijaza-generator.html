@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مولد الإجازات الشرعية الاحترافي</title>
+
+    <!-- مكتبات خارجية -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+    </script>
+
+    <!-- خطوط جوجل العربية -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&family=Reem+Kufi:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Tajawal:wght@400;700&family=Almarai:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ... جميع الأنماط كما هي ... */
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #8e44ad;
+            --bg-color: #f4f6f8;
+            --panel-width: 380px;
+            --paper-width: 210mm;
+            --paper-height: 297mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        aside.controls {
+            width: var(--panel-width);
+            background: white;
+            border-left: 1px solid #ddd;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        h2, h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select,
+        textarea {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[type="file"] {
+            font-size: 0.85rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            border-bottom: 2px solid var(--accent-color);
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            color: var(--accent-color);
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        main.preview-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px;
+            overflow-y: auto;
+            background-color: #e0e0e0;
+        }
+
+        .ijazah-paper {
+            width: var(--paper-width);
+            min-height: var(--paper-height);
+            background: white;
+            padding: 20mm;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            direction: rtl;
+            color: #000;
+            font-size: 1rem;
+            line-height: 2;
+        }
+
+        .template-islamic-pattern {
+            border: 3px solid #1a5276;
+            background: #fef9f0;
+            position: relative;
+        }
+        .template-islamic-pattern .title {
+            color: #1a5276;
+            font-family: 'Aref Ruqaa', serif;
+            border-bottom: 2px solid #1a5276;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .template-andalusian {
+            border: 2px solid #a67c52;
+            background: #fdf8f0;
+            border-radius: 8px;
+        }
+        .template-andalusian .basmala {
+            color: #8B6914;
+            font-family: 'Aref Ruqaa', serif;
+        }
+        .template-andalusian .title {
+            color: #6B4C2A;
+            font-family: 'Aref Ruqaa', serif;
+            background: linear-gradient(to right, transparent, #f0e4d0, transparent);
+            padding: 5px 20px;
+            border-radius: 4px;
+        }
+
+        .template-white-pearl {
+            border: 1px solid #d4d4d4;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
+            border-radius: 4px;
+        }
+        .template-white-pearl .title {
+            color: #2c3e50;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .template-samarqandi {
+            border: 3px double #2c3e50;
+            background: #fffcf5;
+            position: relative;
+        }
+        .template-samarqandi .title {
+            color: #2c3e50;
+            font-family: 'Aref Ruqaa', serif;
+        }
+
+        .template-gilded {
+            border: 4px solid #b8860b;
+            background: linear-gradient(145deg, #fffcf0, #f5ede0);
+        }
+        .template-gilded .basmala {
+            color: #b8860b;
+            font-size: 2.5rem;
+            font-family: 'Aref Ruqaa', serif;
+        }
+        .template-gilded .title {
+            color: #7a6400;
+            font-family: 'Aref Ruqaa', serif;
+            border-bottom: 3px solid #b8860b;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .template-noorani {
+            border: 2px solid #2e86c1;
+            background: #f0f8ff;
+            border-radius: 10px;
+        }
+        .template-noorani .title {
+            color: #1a5276;
+            font-family: 'Amiri', serif;
+        }
+        .template-noorani .basmala {
+            color: #2e86c1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .logo-container img {
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .basmala {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            font-size: 1.05rem;
+            line-height: 2.2;
+            text-align: justify;
+        }
+
+        .student-name-highlight {
+            font-weight: bold;
+            color: #c0392b;
+            font-size: 1.3rem;
+            background: rgba(192, 57, 43, 0.07);
+            padding: 0 8px;
+            border-radius: 4px;
+        }
+
+        .isnad-box {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.03);
+            border-right: 4px solid var(--accent-color);
+            font-size: 0.95rem;
+        }
+
+        .other-shuyukh {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .footer {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-top: 20px;
+            border-top: 1px solid #ccc;
+        }
+
+        .footer-left {
+            text-align: center;
+        }
+
+        .footer-right {
+            text-align: center;
+        }
+
+        .signature-img {
+            max-height: 70px;
+            display: block;
+            margin: 0 auto 5px auto;
+        }
+
+        .seal-img {
+            max-height: 90px;
+            opacity: 0.9;
+        }
+
+        .date-box {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .school-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.05;
+            width: 80%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .font-amiri {
+            font-family: 'Amiri', serif;
+        }
+        .font-scheherazade {
+            font-family: 'Scheherazade New', serif;
+        }
+        .font-aref {
+            font-family: 'Aref Ruqaa', serif;
+        }
+        .font-reem {
+            font-family: 'Reem Kufi', sans-serif;
+        }
+        .font-tajawal {
+            font-family: 'Tajawal', sans-serif;
+        }
+        .font-almarai {
+            font-family: 'Almarai', sans-serif;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 17px;
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from { bottom: 0; opacity: 0; }
+            to { bottom: 30px; opacity: 1; }
+        }
+
+        @keyframes fadeout {
+            from { bottom: 30px; opacity: 1; }
+            to { bottom: 0; opacity: 0; }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid var(--accent-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .date-options {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .date-options input[type="date"] {
+            flex: 1;
+            min-width: 120px;
+        }
+        .date-options input[type="text"] {
+            flex: 2;
+        }
+
+        #printContainer {
+            position: fixed;
+            top: 0;
+            left: -9999px;
+            width: 210mm;
+            background: white;
+            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #printContainer .ijazah-paper {
+            box-shadow: none;
+            margin: 0;
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="controls">
+        <h2>📜 إعدادات الإجازة</h2>
+
+        <div class="form-group">
+            <button class="btn btn-primary" onclick="downloadCurrentPDF()">⬇️ تحميل الإجازة الحالية (PDF)</button>
+        </div>
+
+        <div class="section-title">1. النصوص الثلاثية</div>
+        <div class="form-group">
+            <label>📝 النص قبل الاسم (البوكس الأول)</label>
+            <textarea id="prefixText" oninput="updatePreview()">الحمدُ لله وكفى، وسلامٌ على عباده الذين اصطفى، وبعدُ:
+فإنّ من أعظم ما يتقرّب به العبد إلى ربه بعد الفرائض، نشرُ العلم الشرعي، وروايةُ الحديث النبوي. وحيثُ أنّ الأخ/الأخت:</textarea>
+        </div>
+        <div class="form-group">
+            <label>👤 إسم الطالب المجاز (البوكس الثاني)</label>
+            <input type="text" id="studentName" placeholder="اكتب الاسم هنا..." oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+            <label>📄 النص بعد الاسم (البوكس الثالث)</label>
+            <textarea id="suffixText" oninput="updatePreview()">قد تلقى هذا العلم، وسمعهُ عليَّ، أو قرأهُ عليَّ قراءةً صحيحةً مقبولةً شرعاً، فأجزتُ له/لها روايةَ هذا الكتاب عني، مشافهةً بسماعٍ متصل، ليكونَ من أهلِ هذا الشأنِ وأربابِ هذا الإسناد.</textarea>
+        </div>
+
+        <div class="section-title">2. البيانات الأساسية</div>
+        <div class="form-group">
+            <label>عنوان الإجازة (قابل للتغيير)</label>
+            <input type="text" id="titleText" value="إجازة في رواية الحديث" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+            <label>اسم الشيخ المجيز</label>
+            <input type="text" id="sheikhName" value="أحمد نهار صالح الحسامية" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+            <label>المدرسة / القناة (اختياري)</label>
+            <input type="text" id="schoolName" placeholder="اسم الجهة" oninput="updatePreview()">
+        </div>
+
+        <div class="section-title">3. التاريخ</div>
+        <div class="form-group">
+            <label>اختر التاريخ (نصي أو من التقويم)</label>
+            <div class="date-options">
+                <input type="date" id="datePicker" onchange="updateDateFromPicker()">
+                <input type="text" id="dateText" placeholder="مثال: 15 رمضان 1445هـ" oninput="updatePreview()">
+            </div>
+        </div>
+
+        <div class="section-title">4. الثيم والمظهر</div>
+        <div class="form-group">
+            <label>🎨 قالب التصميم (الثيم)</label>
+            <select id="templateSelect" onchange="updateTemplate()">
+                <option value="template-classic">كلاسيكي</option>
+                <option value="template-islamic-pattern">نقش إسلامي</option>
+                <option value="template-andalusian">أندلسي</option>
+                <option value="template-white-pearl">الدرة البيضاء</option>
+                <option value="template-samarqandi">سمرقندي</option>
+                <option value="template-gilded">مذهّب</option>
+                <option value="template-noorani">نوراني</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>نوع الخط</label>
+            <select id="fontSelect" onchange="updateFont()">
+                <option value="font-amiri">أميري</option>
+                <option value="font-scheherazade">شهرزاد</option>
+                <option value="font-aref">عرفة</option>
+                <option value="font-reem">ريم كوفي</option>
+                <option value="font-tajawal">تاجوال</option>
+                <option value="font-almarai">المراعي</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>شكل البسملة</label>
+            <select id="basmalaStyle" onchange="updateBasmala()">
+                <option value="simple">بسملة بسيطة</option>
+                <option value="decorative">بسملة زخرفية</option>
+            </select>
+        </div>
+
+        <div class="section-title">5. إضافات</div>
+        <div class="form-group">
+            <label>السند (اختياري)</label>
+            <textarea id="isnadText" placeholder="اكتب السند هنا..." oninput="updatePreview()"></textarea>
+        </div>
+        <div class="form-group">
+            <label>شيوخ آخرون يجيزون (اختياري)</label>
+            <textarea id="otherShuyukh" placeholder="الشيخ فلان، الشيخ علان..." oninput="updatePreview()"></textarea>
+        </div>
+
+        <div class="section-title">6. الوسائط (صور)</div>
+        <div class="form-group">
+            <label>شعار الجهة</label>
+            <input type="file" accept="image/*" onchange="handleImageUpload(this, 'logoPreview')">
+        </div>
+        <div class="form-group">
+            <label>صورة التوقيع</label>
+            <input type="file" accept="image/*" onchange="handleImageUpload(this, 'sigPreview')">
+        </div>
+        <div class="form-group">
+            <label>صورة الختم</label>
+            <input type="file" accept="image/*" onchange="handleImageUpload(this, 'sealPreview')">
+        </div>
+        <div class="form-group">
+            <label>صورة العلامة المائية</label>
+            <input type="file" accept="image/*" onchange="handleImageUpload(this, 'watermarkPreview')">
+        </div>
+
+        <div class="section-title">7. الإنتاج بالجملة (Excel)</div>
+        <div class="form-group">
+            <label>رفع ملف إكسل (يجب أن يحتوي عمود "الاسم" وعمود "التاريخ")</label>
+            <input type="file" id="excelFile" accept=".xlsx, .xls">
+        </div>
+        <button class="btn btn-success" onclick="processBatchExcel()">📦 إنشاء إجازات لملف الإكسل (PDF)</button>
+        <p style="font-size: 0.8rem; color: #666;">سيتم استخدام النصوص الثلاثية أعلاه مع تغيير الاسم والتاريخ لكل صف.</p>
+
+    </aside>
+
+    <main class="preview-area">
+        <div id="ijazahContainer" class="ijazah-paper template-classic font-amiri">
+
+            <img id="watermarkPreview" class="watermark hidden" src="" alt="watermark">
+
+            <div class="header">
+                <div class="logo-container">
+                    <img id="logoPreview" class="hidden" src="" alt="Logo">
+                </div>
+                <div class="school-name" id="displaySchool"></div>
+                <div class="basmala" id="displayBasmala">بسم الله الرحمن الرحيم</div>
+                <div class="title" id="displayTitle">إجازة في رواية الحديث</div>
+            </div>
+
+            <div class="content" id="displayContent">
+                <!-- سيتم ملؤها عبر JS -->
+            </div>
+
+            <div id="displayIsnad" class="isnad-box hidden"></div>
+            <div id="displayOtherShuyukh" class="other-shuyukh hidden"></div>
+
+            <div class="footer">
+                <div class="footer-right">
+                    <div>توقيع المجيز</div>
+                    <img id="sigPreview" class="signature-img hidden" src="" alt="Signature">
+                    <div id="displaySheikh" style="font-weight: bold;">الشيخ: ...</div>
+                </div>
+                <div class="footer-left">
+                    <img id="sealPreview" class="seal-img hidden" src="" alt="Seal">
+                    <div class="date-box" id="displayDate">التاريخ: ...</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="printContainer"></div>
+
+    <div id="toast">تمت العملية بنجاح</div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <h3 id="loadingText">جاري المعالجة...</h3>
+    </div>
+
+    <script>
+        // --- التأكد من تحميل المكتبات ---
+        function checkLibraries() {
+            if (typeof html2canvas === 'undefined') {
+                console.warn('html2canvas not loaded, loading from CDN...');
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                document.head.appendChild(script);
+            }
+            if (typeof window.jspdf === 'undefined') {
+                console.warn('jspdf not loaded, loading from CDN...');
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                document.head.appendChild(script);
+            }
+            if (typeof XLSX === 'undefined') {
+                console.warn('XLSX not loaded, loading from CDN...');
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                document.head.appendChild(script);
+            }
+        }
+
+        // تشغيل التحقق بعد تحميل الصفحة
+        window.onload = function() {
+            checkLibraries();
+            updatePreview();
+            console.log('Page loaded, libraries checked');
+        };
+
+        // --- تهيئة المتغيرات ---
+        const ijazahContainer = document.getElementById('ijazahContainer');
+        const printContainer = document.getElementById('printContainer');
+        let uploadedLogo = null;
+        let uploadedSig = null;
+        let uploadedSeal = null;
+        let uploadedWatermark = null;
+
+        // --- وظائف التحديث المباشر ---
+        function updatePreview() {
+            const prefix = document.getElementById('prefixText').value;
+            const student = document.getElementById('studentName').value || " [اسم المجاز] ";
+            const suffix = document.getElementById('suffixText').value;
+
+            const fullText = `${prefix} <span class="student-name-highlight">${student}</span> ${suffix}`;
+            document.getElementById('displayContent').innerHTML = fullText;
+
+            const title = document.getElementById('titleText').value || "إجازة في رواية الحديث";
+            const sheikh = document.getElementById('sheikhName').value;
+            const school = document.getElementById('schoolName').value;
+            const date = document.getElementById('dateText').value;
+
+            document.getElementById('displayTitle').innerText = title;
+            document.getElementById('displaySheikh').innerText = sheikh ? `الشيخ/المجيز: ${sheikh}` : "الشيخ: ...";
+            document.getElementById('displayDate').innerText = date ? `التاريخ: ${date}` : "التاريخ: ...";
+            document.getElementById('displaySchool').innerText = school;
+
+            const isnad = document.getElementById('isnadText').value;
+            const others = document.getElementById('otherShuyukh').value;
+
+            const isnadBox = document.getElementById('displayIsnad');
+            if (isnad.trim() !== "") {
+                isnadBox.innerHTML = `<strong>الإسناد:</strong><br>${isnad}`;
+                isnadBox.classList.remove('hidden');
+            } else {
+                isnadBox.classList.add('hidden');
+            }
+
+            const otherBox = document.getElementById('displayOtherShuyukh');
+            if (others.trim() !== "") {
+                otherBox.innerHTML = `<strong>شهد وتجاوز بذلك شيوخ آخرون منهم:</strong><br>${others}`;
+                otherBox.classList.remove('hidden');
+            } else {
+                otherBox.classList.add('hidden');
+            }
+        }
+
+        function updateTemplate() {
+            const template = document.getElementById('templateSelect').value;
+            ijazahContainer.classList.remove(
+                'template-classic', 
+                'template-islamic-pattern', 
+                'template-andalusian',
+                'template-white-pearl',
+                'template-samarqandi',
+                'template-gilded',
+                'template-noorani'
+            );
+            ijazahContainer.classList.add(template);
+        }
+
+        function updateFont() {
+            const font = document.getElementById('fontSelect').value;
+            ijazahContainer.classList.remove('font-amiri', 'font-scheherazade', 'font-aref', 'font-reem', 'font-tajawal', 'font-almarai');
+            ijazahContainer.classList.add(font);
+        }
+
+        function updateBasmala() {
+            const style = document.getElementById('basmalaStyle').value;
+            const el = document.getElementById('displayBasmala');
+            if (style === 'decorative') {
+                el.style.fontSize = '2.5rem';
+                el.style.fontFamily = "'Aref Ruqaa', serif";
+                el.innerHTML = "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+            } else {
+                el.style.fontSize = '1.8rem';
+                el.style.fontFamily = "inherit";
+                el.innerHTML = "بسم الله الرحمن الرحيم";
+            }
+        }
+
+        function updateDateFromPicker() {
+            const picker = document.getElementById('datePicker');
+            const textInput = document.getElementById('dateText');
+            if (picker.value) {
+                const dateObj = new Date(picker.value);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                textInput.value = dateObj.toLocaleDateString('ar-EG', options);
+                updatePreview();
+            }
+        }
+
+        // --- التعامل مع الصور ---
+        function handleImageUpload(input, imgId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById(imgId);
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    if (imgId === 'logoPreview') uploadedLogo = e.target.result;
+                    else if (imgId === 'sigPreview') uploadedSig = e.target.result;
+                    else if (imgId === 'sealPreview') uploadedSeal = e.target.result;
+                    else if (imgId === 'watermarkPreview') uploadedWatermark = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // --- دالة مساعدة لإنشاء نسخة من الإجازة ---
+        function createIjazahPage(name, date, index) {
+            const prefix = document.getElementById('prefixText').value;
+            const suffix = document.getElementById('suffixText').value;
+            const title = document.getElementById('titleText').value || "إجازة في رواية الحديث";
+            const sheikhName = document.getElementById('sheikhName').value;
+            const schoolName = document.getElementById('schoolName').value;
+            const isnad = document.getElementById('isnadText').value;
+            const others = document.getElementById('otherShuyukh').value;
+            const basmalaStyle = document.getElementById('basmalaStyle').value;
+            const templateClass = document.getElementById('templateSelect').value;
+            const fontClass = document.getElementById('fontSelect').value;
+
+            const clone = ijazahContainer.cloneNode(true);
+            clone.className = `ijazah-paper ${templateClass} ${fontClass}`;
+            clone.style.margin = '0';
+            clone.style.boxShadow = 'none';
+            clone.style.position = 'relative';
+
+            const contentEl = clone.querySelector('#displayContent');
+            if (contentEl) {
+                contentEl.innerHTML = `${prefix} <span class="student-name-highlight">${name}</span> ${suffix}`;
+            }
+
+            const titleEl = clone.querySelector('#displayTitle');
+            if (titleEl) titleEl.innerText = title;
+
+            const sheikhEl = clone.querySelector('#displaySheikh');
+            if (sheikhEl) sheikhEl.innerText = sheikhName ? `الشيخ/المجيز: ${sheikhName}` : "الشيخ: ...";
+
+            const dateEl = clone.querySelector('#displayDate');
+            if (dateEl) dateEl.innerText = date ? `التاريخ: ${date}` : "التاريخ: ...";
+
+            const schoolEl = clone.querySelector('#displaySchool');
+            if (schoolEl) schoolEl.innerText = schoolName || "";
+
+            const isnadBox = clone.querySelector('#displayIsnad');
+            if (isnad.trim() !== "") {
+                isnadBox.innerHTML = `<strong>الإسناد:</strong><br>${isnad}`;
+                isnadBox.classList.remove('hidden');
+            } else {
+                isnadBox.classList.add('hidden');
+            }
+
+            const otherBox = clone.querySelector('#displayOtherShuyukh');
+            if (others.trim() !== "") {
+                otherBox.innerHTML = `<strong>شهد وتجاوز بذلك شيوخ آخرون منهم:</strong><br>${others}`;
+                otherBox.classList.remove('hidden');
+            } else {
+                otherBox.classList.add('hidden');
+            }
+
+            const basmalaEl = clone.querySelector('#displayBasmala');
+            if (basmalaStyle === 'decorative') {
+                basmalaEl.style.fontSize = '2.5rem';
+                basmalaEl.style.fontFamily = "'Aref Ruqaa', serif";
+                basmalaEl.innerHTML = "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+            } else {
+                basmalaEl.style.fontSize = '1.8rem';
+                basmalaEl.style.fontFamily = "inherit";
+                basmalaEl.innerHTML = "بسم الله الرحمن الرحيم";
+            }
+
+            if (uploadedLogo) {
+                const logo = clone.querySelector('#logoPreview');
+                if (logo) { logo.src = uploadedLogo; logo.classList.remove('hidden'); }
+            }
+            if (uploadedSig) {
+                const sig = clone.querySelector('#sigPreview');
+                if (sig) { sig.src = uploadedSig; sig.classList.remove('hidden'); }
+            }
+            if (uploadedSeal) {
+                const seal = clone.querySelector('#sealPreview');
+                if (seal) { seal.src = uploadedSeal; seal.classList.remove('hidden'); }
+            }
+            if (uploadedWatermark) {
+                const wm = clone.querySelector('#watermarkPreview');
+                if (wm) { wm.src = uploadedWatermark; wm.classList.remove('hidden'); }
+            }
+
+            clone.querySelectorAll('[id]').forEach(el => {
+                if (el.id && el.id !== '') {
+                    el.id = `${el.id}-${index}`;
+                }
+            });
+
+            return clone;
+        }
+
+        // ============================================
+        // === الحل الجديد: تنزيل PDF عبر window.parent ===
+        // ============================================
+        async function downloadCurrentPDF() {
+            // التحقق من تحميل المكتبات
+            if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                showToast("جاري تحميل المكتبات... انتظر قليلاً");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                    showToast("فشل تحميل المكتبات، حاول مرة أخرى");
+                    return;
+                }
+            }
+
+            showLoading(true, "جاري إنشاء ملف PDF...");
+
+            try {
+                const element = document.getElementById('ijazahContainer');
+
+                const canvas = await html2canvas(element, {
+                    scale: 3,
+                    useCORS: true,
+                    logging: false,
+                    width: 794,
+                    height: 1123,
+                    backgroundColor: '#ffffff',
+                    letterRendering: true,
+                    font: {
+                        family: 'Amiri, Scheherazade New, Aref Ruqaa, sans-serif',
+                    }
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                
+                // الحصول على البيانات كـ blob
+                const pdfBlob = pdf.output('blob');
+                
+                // محاولة التنزيل من داخل iframe
+                try {
+                    // الطريقة الأولى: محاولة التنزيل مباشرة
+                    pdf.save('ijazah.pdf');
+                    showLoading(false);
+                    showToast("تم تحميل الإجازة بنجاح");
+                } catch (saveError) {
+                    // إذا فشل التنزيل من iframe، نرسل البيانات إلى الصفحة الرئيسية
+                    console.log('Saving from iframe failed, sending to parent...');
+                    
+                    // تحويل blob إلى base64
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        const base64Data = reader.result;
+                        // إرسال البيانات إلى الصفحة الرئيسية
+                        if (window.parent) {
+                            window.parent.postMessage({
+                                type: 'DOWNLOAD_PDF',
+                                data: base64Data,
+                                filename: 'ijazah.pdf'
+                            }, '*');
+                            showLoading(false);
+                            showToast("تم تحميل الإجازة بنجاح");
+                        } else {
+                            showLoading(false);
+                            showToast("حدث خطأ في التنزيل، حاول مرة أخرى");
+                        }
+                    };
+                    reader.readAsDataURL(pdfBlob);
+                }
+
+            } catch (err) {
+                console.error(err);
+                showLoading(false);
+                showToast("حدث خطأ أثناء التحميل: " + err.message);
+            }
+        }
+
+        // === معالجة الإكسل (Batch Processing) ===
+        function processBatchExcel() {
+            const fileInput = document.getElementById('excelFile');
+            if (!fileInput.files.length) {
+                showToast("الرجاء اختيار ملف إكسل أولاً");
+                return;
+            }
+
+            if (typeof XLSX === 'undefined') {
+                showToast("جاري تحميل مكتبة Excel... انتظر قليلاً");
+                return;
+            }
+
+            showLoading(true, "جاري قراءة ملف الإكسل...");
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                if (jsonData.length === 0) {
+                    showLoading(false);
+                    showToast("الملف فارغ!");
+                    return;
+                }
+
+                generateBatchPDF(jsonData);
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        }
+
+        async function generateBatchPDF(dataRows) {
+            if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                showToast("جاري تحميل المكتبات... انتظر قليلاً");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                    showToast("فشل تحميل المكتبات، حاول مرة أخرى");
+                    showLoading(false);
+                    return;
+                }
+            }
+
+            showLoading(true, `جاري إنشاء ${dataRows.length} إجازة...`);
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+
+                for (let i = 0; i < dataRows.length; i++) {
+                    const row = dataRows[i];
+                    const name = row['الاسم'] || row['Name'] || row['اسم المجاز'] || row['student'] || "غير محدد";
+                    const date = row['التاريخ'] || row['Date'] || row['تاريخ الإجازة'] || "";
+
+                    const pageElement = createIjazahPage(name, date, i);
+
+                    printContainer.innerHTML = '';
+                    printContainer.appendChild(pageElement);
+
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    const canvas = await html2canvas(pageElement, {
+                        scale: 3,
+                        useCORS: true,
+                        logging: false,
+                        width: 794,
+                        height: 1123,
+                        backgroundColor: '#ffffff',
+                        letterRendering: true,
+                        font: {
+                            family: 'Amiri, Scheherazade New, Aref Ruqaa, sans-serif',
+                        }
+                    });
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                    if (i > 0) {
+                        pdf.addPage();
+                    }
+
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+                    printContainer.innerHTML = '';
+                }
+
+                // محاولة التنزيل
+                try {
+                    pdf.save('batch_ijazat.pdf');
+                    showLoading(false);
+                    showToast(`✅ تم إنشاء ${dataRows.length} إجازة بنجاح`);
+                } catch (saveError) {
+                    // إذا فشل التنزيل، نرسل البيانات إلى الصفحة الرئيسية
+                    const pdfBlob = pdf.output('blob');
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        if (window.parent) {
+                            window.parent.postMessage({
+                                type: 'DOWNLOAD_PDF',
+                                data: reader.result,
+                                filename: 'batch_ijazat.pdf'
+                            }, '*');
+                            showLoading(false);
+                            showToast(`✅ تم إنشاء ${dataRows.length} إجازة بنجاح`);
+                        }
+                    };
+                    reader.readAsDataURL(pdfBlob);
+                }
+
+            } catch (err) {
+                console.error(err);
+                showLoading(false);
+                showToast("❌ حدث خطأ أثناء معالجة الملف: " + err.message);
+                printContainer.innerHTML = '';
+            }
+        }
+
+        // --- أدوات مساعدة ---
+        function showToast(message) {
+            const x = document.getElementById("toast");
+            x.innerText = message;
+            x.className = "show";
+            setTimeout(function() { x.className = x.className.replace("show", ""); }, 3500);
+        }
+
+        function showLoading(show, text = "") {
+            const overlay = document.getElementById('loadingOverlay');
+            const txt = document.getElementById('loadingText');
+            if (show) {
+                txt.innerText = text;
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        // تشغيل أولي
+        updatePreview();
+    </script>
+</body>
+</html>
